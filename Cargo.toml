@@ -1,5 +1,5 @@
 [package]
-name = "rbtree"
+name = "rb_tree"
 version = "0.1.0"
 authors = ["dbyr <david.michael.byrne17@gmail.com>"]
 edition = "2018"
