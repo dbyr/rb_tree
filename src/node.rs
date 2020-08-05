@@ -307,20 +307,29 @@ impl<T: PartialOrd> Node<T> {
             Recoloured
         } else if inner {
             let mut tmp = Leaf;
+            let mut l_child_tmp = Leaf;
+            let mut r_child_tmp = Leaf;
             let gchild = !right;
             m_swap(&mut tmp, self.child(right).child(gchild));
+            m_swap(&mut l_child_tmp, tmp.child(false));
+            m_swap(&mut r_child_tmp, tmp.child(true));
             m_swap(tmp.child(right), self.child(right));
             m_swap(tmp.child(!right), self);
             m_swap(&mut tmp, self);
+            m_swap(self.child(false).child(true), &mut l_child_tmp);
+            m_swap(self.child(true).child(false), &mut r_child_tmp);
             self.swap_colour();
             self.child(!right).swap_colour();
             Success
         } else {
             let mut tmp = Leaf;
+            let mut child_tmp = Leaf;
             let gchild = !right;
             m_swap(&mut tmp, self.child(right));
             m_swap(tmp.child(gchild), self);
-            m_swap(self, &mut tmp);
+            m_swap(self, &mut child_tmp);
+            m_swap(&mut tmp, self);
+            m_swap(self.child(!right).child(right), &mut child_tmp);
             self.swap_colour();
             self.child(!right).swap_colour();
             Success

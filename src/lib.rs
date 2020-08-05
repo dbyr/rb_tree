@@ -259,6 +259,8 @@ mod tests {
         *t.root.get_left_mut().get_right_mut() = Node::new_black(1.5);
         t.insert(0.0);
         assert_eq!(*t.root.get_right().get_left().value().unwrap(), 1.5);
+
+        // TODO: write one for the inner version as well
     }
 
     #[test]
