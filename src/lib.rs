@@ -28,30 +28,45 @@ impl<T: PartialOrd + Debug> Display for RBTree<T> {
 
 fn write_to_level<T: PartialOrd + Debug>(
     cur: &Node<T>, 
+    from_str: String,
     level: usize, 
     levels: &mut Vec<String>
 ) {
     if levels.len() <= level {
         match cur {
-            Internal(n) => levels.push(format!("{}:{:?}", n.colour(), n.value())),
-            Leaf => levels.push("___".to_string())
+            Internal(n) => levels.push(format!(
+                "{}{}:{:?}", from_str, n.colour(), n.value()
+            )),
+            Leaf => levels.push(format!("{}___", from_str))
         }
     } else {
         match cur {
-            Internal(n) => levels[level] += &format!(" {}:{:?}", n.colour(), n.value()),
-            Leaf => levels[level] += " ___"
+            Internal(n) => levels[level] += &format!(
+                " {}{}:{:?}", from_str, n.colour(), n.value()
+            ),
+            Leaf => levels[level] += &format!(" {}___", from_str)
         }
     }
     if !cur.is_leaf() {
-        write_to_level(cur.get_left(), level + 1, levels);
-        write_to_level(cur.get_right(), level + 1, levels);
+        write_to_level(
+            cur.get_left(), 
+            format!("{:?}->", cur.value().unwrap()), 
+            level + 1, 
+            levels
+        );
+        write_to_level(
+            cur.get_right(), 
+            format!("{:?}->", cur.value().unwrap()), 
+            level + 1, 
+            levels
+        );
     }
 }
 
 impl<T: PartialOrd + Debug> Debug for RBTree<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let mut levels = Vec::new();
-        write_to_level(&self.root, 0, &mut levels);
+        write_to_level(&self.root, "".to_string(), 0, &mut levels);
         let mut f_string = "".to_string();
         for i in 0..levels.len() {
             f_string += &levels[i];
@@ -122,11 +137,14 @@ mod tests {
         t.insert(3.0);
         t.insert(1.0);
         t.insert(1.2);
+        println!("{:?}", t);
         assert_eq!(format!("{}", t), "[1.0, 1.2, 2.0, 3.0]");
         assert_eq!(t.len(), 4);
-        assert_eq!(format!("{:?}", t), "B:2.0\nB:1.0 B:3.0\n___ R:1.2 ___ ___\n___ ___");
+        assert_eq!(format!("{:?}", t), "B:2.0\n2.0->B:1.0 2.0->B:3.0\n1.0->___ 1.0->R:1.2 3.0->___ 3.0->___\n1.2->___ 1.2->___");
     }
 
+    // "cases" refer to this document here:
+    // https://www.usna.edu/Users/cs/crabbe/SI321/current/red-black/red-black.html
     #[test]
     fn test_case1_left() {
         let mut t = RBTree::new();
@@ -260,7 +278,29 @@ mod tests {
         t.insert(0.0);
         assert_eq!(*t.root.get_right().get_left().value().unwrap(), 1.5);
 
-        // TODO: write one for the inner version as well
+        // creates a valid rbtree to test the scenario
+        let mut t = RBTree::new();
+        t.insert(2.0);
+        t.insert(3.0);
+        t.insert(1.0);
+        t.root.get_right_mut().swap_colour();
+        t.root.get_left_mut().swap_colour();
+        t.insert(1.5);
+        t.root.get_left_mut().get_right_mut().swap_colour();
+        t.root.get_left_mut().swap_colour();
+        t.insert(1.25);
+        t.insert(1.75);
+        println!("{:?}", t);
+
+        // now insert the value that should cause the reform
+        t.insert(1.125);
+        assert_eq!(
+            format!("{:?}", t),
+            "B:1.5\n1.5->R:1.0 1.5->R:2.0\n\
+            1.0->___ 1.0->B:1.25 2.0->B:1.75 2.0->B:3.0\n\
+            1.25->R:1.125 1.25->___ 1.75->___ 1.75->___ 3.0->___ 3.0->___\n\
+            1.125->___ 1.125->___"
+        );
     }
 
     #[test]

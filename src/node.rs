@@ -271,7 +271,7 @@ impl<T: PartialOrd> Node<T> {
         rep
     }
 
-    // panicing operators used internally very carefully
+    // panicing operators only used internally very carefully
     // they are essentially used for convenience and to make
     // code look nicer while working with certain guarantees
     // (i.e., their use should never actually cause a panic)
@@ -301,11 +301,15 @@ impl<T: PartialOrd> Node<T> {
         recolour: bool
     ) -> Insertion {
         if recolour {
+
+            // doesn't move anything, simply recolours
             self.swap_colour();
             self.child(false).swap_colour();
             self.child(true).swap_colour();
             Recoloured
         } else if inner {
+
+            // realligns the newly inserted value as the new local root
             let mut tmp = Leaf;
             let mut l_child_tmp = Leaf;
             let mut r_child_tmp = Leaf;
@@ -322,6 +326,9 @@ impl<T: PartialOrd> Node<T> {
             self.child(!right).swap_colour();
             Success
         } else {
+
+            // realigns the parent of the newly inserted value as the new
+            // local root
             let mut tmp = Leaf;
             let mut child_tmp = Leaf;
             let gchild = !right;
@@ -366,10 +373,10 @@ impl<T: PartialOrd> Node<T> {
                     Inserted => {
                         if self.is_black() {
                             Success
-                        } else if !right {
-                            InvalidLeft
-                        } else {
+                        } else if right {
                             InvalidRight
+                        } else {
+                            InvalidLeft
                         }
                     },
                     Success => Success
