@@ -5,7 +5,8 @@ use std::mem::swap as m_swap;
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Colour {
     Red,
-    Black
+    Black,
+    DBlack
 }
 
 enum Insertion {
@@ -16,13 +17,10 @@ enum Insertion {
     Success
 }
 
-impl std::fmt::Display for Colour {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Colour::Red => write!(f, "R"),
-            Colour::Black => write!(f, "B")
-        }
-    }
+enum Removal<T> {
+    Removed(T),
+    Match,
+    NotFound
 }
 
 // makes matches nicer
@@ -42,6 +40,17 @@ pub enum Node<T: PartialOrd> {
 use Node::*;
 use Colour::*;
 use Insertion::*;
+use Removal::*;
+
+impl std::fmt::Display for Colour {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Red => write!(f, "R"),
+            Black => write!(f, "B"),
+            DBlack => write!(f, "D")
+        }
+    }
+}
 
 // convenience implementations for insertion and moving things around
 impl<T: PartialOrd> PartialEq<T> for Node<T> {
@@ -282,6 +291,7 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
+    // true gets the right child, false left
     fn child(&mut self, right: bool) -> &mut Node<T> {
         match self {
             Internal(n) => if right {
@@ -396,4 +406,75 @@ impl<T: PartialOrd> Node<T> {
             self.swap_colour();
         }
     }
+
+    // fn find_item(&mut self, val: &T) -> &mut Node<T> {
+    //     let mut cur = self;
+    //     while !cur.is_leaf() {
+    //         if *cur >= *val {
+    //             cur = cur.child(false);
+    //         } else {
+    //             cur = cur.child(true);
+    //         }
+    //         if cur == val {break;}
+    //     }
+    //     cur
+    // }
+
+    // fn swap_left_most_right(&mut self, swap: &mut T) -> bool {
+    //     let mut ret = Leaf;
+    //     let mut node = if self.get_right_mut().is_leaf() {
+    //         return false;
+    //     } else {
+    //         self.child(true)
+    //     };
+    //     while !node.child(false).is_leaf() {
+    //         node = node.child(false);
+    //     }
+    //     m_swap(swap, &mut node.innards().value);
+    //     true
+    // }
+
+    // fn swap_down(&mut self, )
+
+    // fn remove_op(&mut self, val: &T) -> Removal<T> {
+    //     match self {
+    //         Internal(n) => {
+    //             let (res, right) = if n.value == *val {
+    //                 (Match, true)
+    //             } else if n.value > *val {
+    //                 (n.l_child.remove_op(val), false)
+    //             } else {
+    //                 (n.r_child.remove_op(val), true)
+    //             };
+    //             match res {
+    //                 Match => {
+    //                     if self.swap_left_most_right(&mut self.innards().value) {
+
+    //                     }
+    //                     NotFound
+    //                 },
+    //                 Removed(n) => {
+    //                     NotFound
+    //                 },
+    //                 NotFound => NotFound
+    //             }
+    //         },
+    //         Leaf => {
+    //             NotFound
+    //         }
+    //     }
+    // }
+
+    // pub fn remove(&mut self, val: &T) -> Option<T> {
+    //     let item = self.find_item(val);
+    //     let rep = if item.is_leaf() {
+    //         return None;
+    //     } else {
+    //         item.left_most_right()
+    //     };
+    //     let mut tmp = Leaf;
+    //     m_swap
+    //     m_swap(&mut node.innards().value, &mut self.innards().value);
+    //     None
+    // }
 }
