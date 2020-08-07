@@ -5,12 +5,12 @@ use node::Colour::Black;
 use node::Node::{Internal, Leaf};
 use std::fmt::{Debug, Display, Result, Formatter};
 
-pub struct RBTree<T: PartialOrd> {
+pub struct RBTree<T: Debug + PartialOrd> {
     root: Node<T>,
     contained: usize
 }
 
-fn ordered_insertion<'a, T: PartialOrd>(cur: &'a Node<T>, order: &mut Vec<&'a T>) {
+fn ordered_insertion<'a, T: Debug + PartialOrd>(cur: &'a Node<T>, order: &mut Vec<&'a T>) {
     if cur.is_leaf() {
         return;
     }
@@ -27,7 +27,7 @@ impl<T: PartialOrd + Debug> Display for RBTree<T> {
     }
 }
 
-fn write_to_level<T: PartialOrd + Debug>(
+pub fn write_to_level<T: PartialOrd + Debug>(
     cur: &Node<T>, 
     from_str: String,
     level: usize, 
@@ -79,7 +79,7 @@ impl<T: PartialOrd + Debug> Debug for RBTree<T> {
     }
 }
 
-impl<T: PartialOrd> RBTree<T> {
+impl<T: Debug + PartialOrd> RBTree<T> {
     pub fn new() -> RBTree<T> {
         RBTree {root: Leaf(Black), contained: 0}
     }
@@ -110,9 +110,15 @@ impl<T: PartialOrd> RBTree<T> {
 
     // }
 
-    // pub fn remove(&mut self, val: &T) -> Option<T> {
-
-    // }
+    pub fn remove(&mut self, val: &T) -> Option<T> {
+        match self.root.remove(val) {
+            Some(v) => {
+                self.contained -= 1;
+                Some(v)
+            },
+            None => None
+        }
+    }
 
     // pub fn pop(&mut self) -> Option<T> {
 
@@ -307,5 +313,105 @@ mod tests {
     #[test]
     fn test_complex_insertion() {
 
+    }
+
+    #[test]
+    fn test_removal_empty() {
+        let mut t = RBTree::new();
+        assert!(t.remove(&3.0).is_none());
+        assert_eq!(t.contained, 0);
+    }
+
+    #[test]
+    fn test_removal_notfound() {
+        let mut t = RBTree::new();
+        t.insert(2.0);
+        t.insert(1.0);
+        t.insert(3.0);
+        t.insert(1.5);
+        assert!(t.remove(&0.0).is_none());
+        assert!(t.remove(&1.2).is_none());
+        assert!(t.remove(&1.8).is_none());
+        assert!(t.remove(&2.1).is_none());
+        assert!(t.remove(&3.9).is_none());
+        assert_eq!(t.contained, 4);
+        assert_eq!(
+            format!("{}", t),
+            "[1.0, 1.5, 2.0, 3.0]"
+        );
+    }
+
+    #[test]
+    fn test_remove_only_value() {
+        let mut t = RBTree::new();
+        t.insert(1);
+        assert_eq!(t.len(), 1);
+        assert_eq!(t.remove(&1).unwrap(), 1);
+        assert_eq!(t.len(), 0);
+    }
+
+    #[test]
+    fn test_remove_root() {
+        let mut t = RBTree::new();
+        t.insert(2.0);
+        t.insert(1.0);
+        t.insert(3.0);
+        assert_eq!(t.remove(&2.0).unwrap(), 2.0);
+        assert_eq!(
+            format!("{:?}", t),
+            "B:3.0\n3.0->R:1.0 3.0->___\n1.0->___ 1.0->___"
+        );
+        assert_eq!(t.remove(&3.0).unwrap(), 3.0);
+        assert_eq!(
+            format!("{:?}", t),
+            "B:1.0\n1.0->___ 1.0->___"
+        );
+
+        let mut t = RBTree::new();
+        t.insert(2.0);
+        t.insert(1.0);
+        t.insert(3.0);
+        t.insert(1.5);
+        t.insert(4.0);
+        assert_eq!(t.remove(&2.0).unwrap(), 2.0);
+        assert_eq!(
+            format!("{:?}", t),
+            "B:3.0\n\
+            3.0->B:1.0 3.0->B:4.0\n\
+            1.0->___ 1.0->R:1.5 4.0->___ 4.0->___\n\
+            1.5->___ 1.5->___"
+        );
+        t.insert(3.5);
+        assert_eq!(t.remove(&3.0).unwrap(), 3.0);
+        assert_eq!(
+            format!("{:?}", t),
+            "B:3.5\n\
+            3.5->B:1.0 3.5->B:4.0\n\
+            1.0->___ 1.0->R:1.5 4.0->___ 4.0->___\n\
+            1.5->___ 1.5->___"
+        );
+    }
+
+    #[test]
+    fn test_removal_no_double_black() {
+        let mut t = RBTree::new();
+        t.insert(2.0);
+        t.insert(1.0);
+        t.root.get_left_mut().swap_colour(); // simulating again...
+        t.insert(3.0);
+        t.root.get_right_mut().swap_colour();
+        t.insert(1.5);
+        t.insert(2.5);
+        println!("{:?}", t);
+        
+        assert_eq!(t.remove(&1.0).unwrap(), 1.0);
+        println!("{:?}", t);
+        assert_eq!(
+            format!("{:?}", t),
+            "B:2.0\n\
+            2.0->B:1.5 2.0->B:3.0\n\
+            1.5->___ 1.5->___ 3.0->R:2.5 3.0->___\n\
+            2.5->___ 2.5->___"
+        );
     }
 }

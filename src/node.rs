@@ -1,4 +1,5 @@
 use std::boxed::Box;
+use std::fmt::Debug;
 use std::ops::DerefMut;
 use std::mem::swap as m_swap;
 
@@ -25,7 +26,8 @@ enum Removal<T> {
 }
 
 // makes matches nicer
-pub struct Innards<T: PartialOrd> {
+#[derive(Debug)]
+pub struct Innards<T: Debug + PartialOrd> {
     value: T,
     colour: Colour,
     r_child: Box<Node<T>>,
@@ -33,7 +35,8 @@ pub struct Innards<T: PartialOrd> {
 }
 
 // represents a node in the rb_tree
-pub enum Node<T: PartialOrd> {
+#[derive(Debug)]
+pub enum Node<T: Debug + PartialOrd> {
     Internal(Innards<T>),
     Leaf(Colour)
 }
@@ -54,7 +57,7 @@ impl std::fmt::Display for Colour {
 }
 
 // convenience implementations for insertion and moving things around
-impl<T: PartialOrd> PartialEq<T> for Node<T> {
+impl<T: Debug + PartialOrd> PartialEq<T> for Node<T> {
     fn eq(&self, other: &T) -> bool {
         match self {
             Internal(n) => n.value == *other,
@@ -63,7 +66,7 @@ impl<T: PartialOrd> PartialEq<T> for Node<T> {
     }
 }
 
-impl<T: PartialOrd> PartialOrd<T> for Node<T> {
+impl<T: Debug + PartialOrd> PartialOrd<T> for Node<T> {
     fn partial_cmp(&self, other: &T) -> Option<std::cmp::Ordering> {
         match self {
             Internal(n) => n.value.partial_cmp(other),
@@ -72,7 +75,7 @@ impl<T: PartialOrd> PartialOrd<T> for Node<T> {
     }
 }
 
-impl<T: PartialOrd> PartialEq for Node<T> {
+impl<T: Debug + PartialOrd> PartialEq for Node<T> {
     fn eq(&self, other: &Node<T>) -> bool {
         if let (Internal(n1), Internal(n2)) = (self, other) {
             n1.value == n2.value
@@ -82,7 +85,7 @@ impl<T: PartialOrd> PartialEq for Node<T> {
     }
 }
 
-impl<T: PartialOrd> PartialOrd for Node<T> {
+impl<T: Debug + PartialOrd> PartialOrd for Node<T> {
     fn partial_cmp(&self, other: &Node<T>) -> Option<std::cmp::Ordering> {
         if let (Internal(n1), Internal(n2)) = (self, other) {
             n1.value.partial_cmp(&n2.value)
@@ -92,7 +95,7 @@ impl<T: PartialOrd> PartialOrd for Node<T> {
     }
 }
 
-impl<T: PartialOrd> Innards<T> {
+impl<T: Debug + PartialOrd> Innards<T> {
     pub fn is_black(&self) -> bool {
         match self.colour {
             Black => true,
@@ -131,7 +134,7 @@ impl<T: PartialOrd> Innards<T> {
 }
 
 #[allow(dead_code)]
-impl<T: PartialOrd> Node<T> {
+impl<T: Debug + PartialOrd> Node<T> {
 
     pub fn new(val: T) -> Node<T> {
         Internal(
@@ -159,7 +162,7 @@ impl<T: PartialOrd> Node<T> {
     pub fn is_black(&self) -> bool {
         match self {
             Internal(n) => n.is_black(),
-            Leaf(_) => true
+            Leaf(c) => *c == Black
         }
     }
     pub fn is_red(&self) -> bool {
@@ -552,7 +555,7 @@ impl<T: PartialOrd> Node<T> {
                 ret.double_black();
             }
         }
-        m_swap(&mut ret, &mut node);
+        m_swap(&mut ret, node);
         let mut retval = ret.gut().value;
         m_swap(&mut self.innards().value, &mut retval);
         (retval, doubled)
@@ -581,7 +584,7 @@ impl<T: PartialOrd> Node<T> {
                         let parent = if self.child(right).is_double_black() {
                             self
                         } else {
-                            self.double_black_parent()
+                            self.child(right).double_black_parent()
                         };
                         if parent.deletion_switcheroo() {
                             Doubled(n)
