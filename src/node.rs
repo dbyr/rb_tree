@@ -197,7 +197,18 @@ impl<T: PartialOrd> Node<T> {
             n.swap_colour();
         } // leaves always black
     }
-
+    fn black(&mut self) {
+        match self {
+            Internal(n) => n.colour = Black,
+            Leaf(c) => *c = Black
+        }
+    }
+    fn red(&mut self) {
+        match self {
+            Internal(n) => n.colour = Red,
+            Leaf(c) => *c = Red
+        }
+    }
     fn double_black(&mut self) {
         match self {
             Internal(n) => n.colour = DBlack,
@@ -334,6 +345,30 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
+    fn inner_switcheroo(&mut self, right: bool) {
+        let mut tmp = Leaf(Black);
+        let mut l_child_tmp = Leaf(Black);
+        let mut r_child_tmp = Leaf(Black);
+        m_swap(&mut tmp, self.child(right).child(!right));
+        m_swap(&mut l_child_tmp, tmp.child(false));
+        m_swap(&mut r_child_tmp, tmp.child(true));
+        m_swap(tmp.child(right), self.child(right));
+        m_swap(tmp.child(!right), self);
+        m_swap(&mut tmp, self);
+        m_swap(self.child(false).child(true), &mut l_child_tmp);
+        m_swap(self.child(true).child(false), &mut r_child_tmp);
+    }
+
+    fn outer_switcheroo(&mut self, right: bool) {
+        let mut tmp = Leaf(Black);
+        let mut child_tmp = Leaf(Black);
+        m_swap(&mut tmp, self.child(right));
+        m_swap(tmp.child(!right), self);
+        m_swap(self, &mut child_tmp);
+        m_swap(&mut tmp, self);
+        m_swap(self.child(!right).child(right), &mut child_tmp);
+    }
+
     // reorders nodes when required upon insertion
     fn insert_switcheroo(
         &mut self,
@@ -351,18 +386,7 @@ impl<T: PartialOrd> Node<T> {
         } else if inner {
 
             // realligns the newly inserted value as the new local root
-            let mut tmp = Leaf(Black);
-            let mut l_child_tmp = Leaf(Black);
-            let mut r_child_tmp = Leaf(Black);
-            let gchild = !right;
-            m_swap(&mut tmp, self.child(right).child(gchild));
-            m_swap(&mut l_child_tmp, tmp.child(false));
-            m_swap(&mut r_child_tmp, tmp.child(true));
-            m_swap(tmp.child(right), self.child(right));
-            m_swap(tmp.child(!right), self);
-            m_swap(&mut tmp, self);
-            m_swap(self.child(false).child(true), &mut l_child_tmp);
-            m_swap(self.child(true).child(false), &mut r_child_tmp);
+            self.inner_switcheroo(right);
             self.swap_colour();
             self.child(!right).swap_colour();
             Success
@@ -370,14 +394,7 @@ impl<T: PartialOrd> Node<T> {
 
             // realigns the parent of the newly inserted value as the new
             // local root
-            let mut tmp = Leaf(Black);
-            let mut child_tmp = Leaf(Black);
-            let gchild = !right;
-            m_swap(&mut tmp, self.child(right));
-            m_swap(tmp.child(gchild), self);
-            m_swap(self, &mut child_tmp);
-            m_swap(&mut tmp, self);
-            m_swap(self.child(!right).child(right), &mut child_tmp);
+            self.outer_switcheroo(right);
             self.swap_colour();
             self.child(!right).swap_colour();
             Success
@@ -441,10 +458,41 @@ impl<T: PartialOrd> Node<T> {
     // returns true if double black propogates
     fn deletion_switcheroo(&mut self) -> bool {
         let right = if self.get_right().is_double_black() {
-            true
-        } else {
             false
+        } else {
+            true
         };
+        if self.child(right).is_black() {
+            if self.child(right).child(!right).is_red() {
+                self.inner_switcheroo(right);
+            } else if self.child(right).child(right).is_red() {
+                self.outer_switcheroo(right);
+            } else {
+                self.child(right).red();
+                if self.is_black() {
+                    self.double_black();
+                    return true;
+                } else {
+                    self.black();
+                    return false;
+                }
+            }
+
+            // recolour things appropriately
+            if self.child(right).is_black() {
+                self.black();
+            } else {
+                self.red();
+            }
+            self.child(right).black();
+            self.child(right).child(right).black();
+            self.child(!right).black();
+        } else {
+            self.inner_switcheroo(right);
+            self.black();
+            self.child(!right).red();
+            return self.child(!right).deletion_switcheroo();
+        }
         false
     }
 
