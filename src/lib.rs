@@ -1,6 +1,7 @@
 mod node;
 
 use node::Node;
+use node::Colour::Black;
 use node::Node::{Internal, Leaf};
 use std::fmt::{Debug, Display, Result, Formatter};
 
@@ -37,14 +38,14 @@ fn write_to_level<T: PartialOrd + Debug>(
             Internal(n) => levels.push(format!(
                 "{}{}:{:?}", from_str, n.colour(), n.value()
             )),
-            Leaf => levels.push(format!("{}___", from_str))
+            Leaf(_) => levels.push(format!("{}___", from_str))
         }
     } else {
         match cur {
             Internal(n) => levels[level] += &format!(
                 " {}{}:{:?}", from_str, n.colour(), n.value()
             ),
-            Leaf => levels[level] += &format!(" {}___", from_str)
+            Leaf(_) => levels[level] += &format!(" {}___", from_str)
         }
     }
     if !cur.is_leaf() {
@@ -80,7 +81,7 @@ impl<T: PartialOrd + Debug> Debug for RBTree<T> {
 
 impl<T: PartialOrd> RBTree<T> {
     pub fn new() -> RBTree<T> {
-        RBTree {root: Leaf, contained: 0}
+        RBTree {root: Leaf(Black), contained: 0}
     }
     pub fn ordered(&self) -> Vec<&T> {
         let mut order = Vec::new();
