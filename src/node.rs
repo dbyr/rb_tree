@@ -10,11 +10,12 @@ pub enum Colour {
     DBlack
 }
 
-enum Insertion {
+enum Insertion<T> {
     InvalidLeft,
     InvalidRight,
     Recoloured,
     Inserted,
+    Replaced(T),
     Success
 }
 
@@ -378,7 +379,7 @@ impl<T: Debug + PartialOrd> Node<T> {
         right: bool,
         inner: bool,
         recolour: bool
-    ) -> Insertion {
+    ) -> Insertion<T> {
         if recolour {
 
             // doesn't move anything, simply recolours
@@ -405,10 +406,13 @@ impl<T: Debug + PartialOrd> Node<T> {
     }
 
     // returns the value if the value was not inserted
-    fn insert_op(&mut self, new_v: T) -> Insertion {
+    fn insert_op(&mut self, mut new_v: T) -> Insertion<T> {
         match self {
             Internal(n) => {
-                let (res, right, recolour) = if n.value >= new_v {
+                let (res, right, recolour) = if n.value == new_v {
+                    m_swap(&mut n.value, &mut new_v); // useful if used like a map
+                    (Replaced(new_v), true, true)
+                } else if n.value > new_v {
                     (n.l_child.insert_op(new_v), false, n.r_child.is_red())
                 } else {
                     (n.r_child.insert_op(new_v), true, n.l_child.is_red())
@@ -440,6 +444,7 @@ impl<T: Debug + PartialOrd> Node<T> {
                             InvalidLeft
                         }
                     },
+                    Replaced(v) => Replaced(v),
                     Success => Success
                 }
             },
@@ -451,10 +456,14 @@ impl<T: Debug + PartialOrd> Node<T> {
     }
 
     // only to be called on the root
-    pub fn insert(&mut self, new_v: T) {
-        self.insert_op(new_v);
+    pub fn insert(&mut self, new_v: T) -> Option<T> {
+        let res = self.insert_op(new_v);
         if self.is_red() {
             self.swap_colour();
+        }
+        match res {
+            Replaced(v) => Some(v),
+            _ => None
         }
     }
 
@@ -466,61 +475,49 @@ impl<T: Debug + PartialOrd> Node<T> {
             true
         };
         if self.child(right).is_black() {
+            let self_col = self.colour();
             if self.child(right).child(!right).is_red() {
+                println!("Inner switcheroo on {:#?}", self);
                 self.inner_switcheroo(right);
             } else if self.child(right).child(right).is_red() {
+                println!("Outer switcheroo on {:#?}", self);
                 self.outer_switcheroo(right);
             } else {
+                println!("Colour switcheroo on {:#?}", self);
                 self.child(right).red();
+                self.child(!right).black();
                 if self.is_black() {
                     self.double_black();
+                    println!("After: {:#?}", self);
                     return true;
                 } else {
                     self.black();
+                    println!("After: {:#?}", self);
                     return false;
                 }
             }
 
             // recolour things appropriately
-            if self.child(right).is_black() {
-                self.black();
-            } else {
-                self.red();
+            match self_col {
+                Black => self.black(),
+                Red => self.red(),
+                _ => panic!("Double black at local root")
             }
             self.child(right).black();
-            self.child(right).child(right).black();
+            self.child(!right).child(!right).black();
             self.child(!right).black();
+            println!("After: {:#?}", self);
         } else {
-            self.inner_switcheroo(right);
+            println!("Before case 7 {:#?}", self);
+            self.outer_switcheroo(right);
             self.black();
             self.child(!right).red();
-            return self.child(!right).deletion_switcheroo();
-        }
-        false
-    }
-
-    fn double_black_parent(&mut self) -> &mut Node<T> {
-        let right;
-        let mut parent = 
-        if self.get_right().is_double_black() 
-                || self.get_left().is_double_black() {
-            return self;
-        } else if self.get_right().is_leaf() {
-            right = true;
-            self.get_left_mut()
-        } else if self.get_left().is_leaf() {
-            panic!("Double black not found from given root");
-        } else {
-            right = false;
-            self.get_right_mut()
-        };
-        while !parent.child(right).is_double_black() {
-            parent = parent.child(right);
-            if parent.is_leaf() {
-                panic!("Double black not found from given root");
+            println!("After case 7 {:#?}", self);
+            if self.child(!right).deletion_switcheroo() {
+                return self.deletion_switcheroo();
             }
         }
-        parent
+        false
     }
 
     fn swap_innermost_descendant(&mut self) -> (T, bool) {
@@ -561,6 +558,16 @@ impl<T: Debug + PartialOrd> Node<T> {
         (retval, doubled)
     }
 
+    fn swap_doubles_up(&mut self, right: bool) -> bool {
+        if self.child(!right).is_double_black() {
+            self.deletion_switcheroo()
+        } else if self.child(!right).swap_doubles_up(right) {
+            self.deletion_switcheroo()
+        } else {
+            false
+        }
+    }
+
     fn remove_op(&mut self, val: &T) -> Removal<T> {
         match self {
             Internal(n) => {
@@ -581,12 +588,16 @@ impl<T: Debug + PartialOrd> Node<T> {
                         }
                     },
                     Doubled(n) => {
-                        let parent = if self.child(right).is_double_black() {
-                            self
+                        let doubled =
+                        if self.child(right).is_double_black() {
+                            println!("Calling deletion_switcheroo");
+                            self.deletion_switcheroo()
+                        } else if self.child(right).swap_doubles_up(right) {
+                            self.deletion_switcheroo()
                         } else {
-                            self.child(right).double_black_parent()
+                            false
                         };
-                        if parent.deletion_switcheroo() {
+                        if doubled {
                             Doubled(n)
                         } else {
                             Removed(n)
