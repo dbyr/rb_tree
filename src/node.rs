@@ -477,22 +477,17 @@ impl<T: Debug + PartialOrd> Node<T> {
         if self.child(right).is_black() {
             let self_col = self.colour();
             if self.child(right).child(!right).is_red() {
-                println!("Inner switcheroo on {:#?}", self);
                 self.inner_switcheroo(right);
             } else if self.child(right).child(right).is_red() {
-                println!("Outer switcheroo on {:#?}", self);
                 self.outer_switcheroo(right);
             } else {
-                println!("Colour switcheroo on {:#?}", self);
                 self.child(right).red();
                 self.child(!right).black();
                 if self.is_black() {
                     self.double_black();
-                    println!("After: {:#?}", self);
                     return true;
                 } else {
                     self.black();
-                    println!("After: {:#?}", self);
                     return false;
                 }
             }
@@ -506,13 +501,10 @@ impl<T: Debug + PartialOrd> Node<T> {
             self.child(right).black();
             self.child(!right).child(!right).black();
             self.child(!right).black();
-            println!("After: {:#?}", self);
         } else {
-            println!("Before case 7 {:#?}", self);
             self.outer_switcheroo(right);
             self.black();
             self.child(!right).red();
-            println!("After case 7 {:#?}", self);
             if self.child(!right).deletion_switcheroo() {
                 return self.deletion_switcheroo();
             }
@@ -590,7 +582,6 @@ impl<T: Debug + PartialOrd> Node<T> {
                     Doubled(n) => {
                         let doubled =
                         if self.child(right).is_double_black() {
-                            println!("Calling deletion_switcheroo");
                             self.deletion_switcheroo()
                         } else if self.child(right).swap_doubles_up(right) {
                             self.deletion_switcheroo()
