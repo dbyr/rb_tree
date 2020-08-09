@@ -27,8 +27,7 @@ enum Removal<T> {
 }
 
 // makes matches nicer
-#[derive(Debug)]
-pub struct Innards<T: Debug + PartialOrd> {
+pub struct Innards<T: PartialOrd> {
     value: T,
     colour: Colour,
     r_child: Box<Node<T>>,
@@ -36,8 +35,7 @@ pub struct Innards<T: Debug + PartialOrd> {
 }
 
 // represents a node in the rb_tree
-#[derive(Debug)]
-pub enum Node<T: Debug + PartialOrd> {
+pub enum Node<T: PartialOrd> {
     Internal(Innards<T>),
     Leaf(Colour)
 }
@@ -58,7 +56,7 @@ impl std::fmt::Display for Colour {
 }
 
 // convenience implementations for insertion and moving things around
-impl<T: Debug + PartialOrd> PartialEq<T> for Node<T> {
+impl<T: PartialOrd> PartialEq<T> for Node<T> {
     fn eq(&self, other: &T) -> bool {
         match self {
             Internal(n) => n.value == *other,
@@ -67,7 +65,7 @@ impl<T: Debug + PartialOrd> PartialEq<T> for Node<T> {
     }
 }
 
-impl<T: Debug + PartialOrd> PartialOrd<T> for Node<T> {
+impl<T: PartialOrd> PartialOrd<T> for Node<T> {
     fn partial_cmp(&self, other: &T) -> Option<std::cmp::Ordering> {
         match self {
             Internal(n) => n.value.partial_cmp(other),
@@ -76,7 +74,7 @@ impl<T: Debug + PartialOrd> PartialOrd<T> for Node<T> {
     }
 }
 
-impl<T: Debug + PartialOrd> PartialEq for Node<T> {
+impl<T: PartialOrd> PartialEq for Node<T> {
     fn eq(&self, other: &Node<T>) -> bool {
         if let (Internal(n1), Internal(n2)) = (self, other) {
             n1.value == n2.value
@@ -86,7 +84,7 @@ impl<T: Debug + PartialOrd> PartialEq for Node<T> {
     }
 }
 
-impl<T: Debug + PartialOrd> PartialOrd for Node<T> {
+impl<T: PartialOrd> PartialOrd for Node<T> {
     fn partial_cmp(&self, other: &Node<T>) -> Option<std::cmp::Ordering> {
         if let (Internal(n1), Internal(n2)) = (self, other) {
             n1.value.partial_cmp(&n2.value)
@@ -96,7 +94,7 @@ impl<T: Debug + PartialOrd> PartialOrd for Node<T> {
     }
 }
 
-impl<T: Debug + PartialOrd> Innards<T> {
+impl<T: PartialOrd> Innards<T> {
     pub fn is_black(&self) -> bool {
         match self.colour {
             Black => true,
@@ -134,8 +132,7 @@ impl<T: Debug + PartialOrd> Innards<T> {
     }
 }
 
-#[allow(dead_code)]
-impl<T: Debug + PartialOrd> Node<T> {
+impl<T: PartialOrd> Node<T> {
 
     pub fn new(val: T) -> Node<T> {
         Internal(
@@ -560,42 +557,69 @@ impl<T: Debug + PartialOrd> Node<T> {
         }
     }
 
-    fn remove_op(&mut self, val: &T) -> Removal<T> {
+    fn remove_result_step(&mut self, res: Removal<T>, right: bool) -> Removal<T> {
+        match res {
+            Match => {
+                let (ret, doubled) = self.swap_innermost_descendant();
+                if doubled {
+                    Doubled(ret)
+                } else {
+                    Removed(ret)
+                }
+            },
+            Doubled(n) => {
+                let doubled =
+                if self.child(right).is_double_black() {
+                    self.deletion_switcheroo()
+                } else if self.child(right).swap_doubles_up(right) {
+                    self.deletion_switcheroo()
+                } else {
+                    false
+                };
+                if doubled {
+                    Doubled(n)
+                } else {
+                    Removed(n)
+                }
+            },
+            Removed(n) => Removed(n),
+            NotFound => NotFound
+        }
+    }
+
+    fn remove_op<K: PartialOrd<T>>(&mut self, val: &K) -> Removal<T> {
         match self {
             Internal(n) => {
-                let (res, right) = if n.value == *val {
+                let (res, right) = if *val == n.value {
                     (Match, true)
-                } else if n.value > *val {
+                } else if *val < n.value {
                     (n.l_child.remove_op(val), false)
                 } else {
                     (n.r_child.remove_op(val), true)
                 };
-                match res {
-                    Match => {
-                        let (ret, doubled) = self.swap_innermost_descendant();
-                        if doubled {
-                            Doubled(ret)
-                        } else {
-                            Removed(ret)
-                        }
-                    },
-                    Doubled(n) => {
-                        let doubled =
-                        if self.child(right).is_double_black() {
-                            self.deletion_switcheroo()
-                        } else if self.child(right).swap_doubles_up(right) {
-                            self.deletion_switcheroo()
-                        } else {
-                            false
-                        };
-                        if doubled {
-                            Doubled(n)
-                        } else {
-                            Removed(n)
-                        }
-                    },
-                    Removed(n) => Removed(n),
-                    NotFound => NotFound
+                self.remove_result_step(res, right)
+            },
+            Leaf(_) => {
+                NotFound
+            }
+        }
+    }
+
+    fn pop_op(&mut self, back: bool) -> Removal<T> {
+        match self {
+            Internal(n) => {
+                if back {
+                    if n.r_child.is_leaf() {
+                        self.remove_result_step(Match, true)
+                    } else {
+                        n.r_child.pop_op(back)
+                    }
+                } else {
+                    if n.l_child.is_leaf() {
+                        self.remove_result_step(Match, true)
+                    } else {
+                        n.l_child.pop_op(back)
+                    }
                 }
             },
             Leaf(_) => {
@@ -604,8 +628,23 @@ impl<T: Debug + PartialOrd> Node<T> {
         }
     }
 
+    pub fn pop(&mut self, back: bool) -> Option<T> {
+        match self.pop_op(back) {
+            NotFound => None,
+            Removed(v) => {
+                Some(v)
+            },
+            Doubled(v) => {
+                self.swap_colour();
+                Some(v)
+            },
+            // uhh, shouldn't ever happen if I've coded it right
+            _ => panic!("Returned invalid option, tree structure damaged")
+        }
+    }
+
     // as with insertion, this should only be called on the root
-    pub fn remove(&mut self, val: &T) -> Option<T> {
+    pub fn remove<K: PartialOrd<T>>(&mut self, val: &K) -> Option<T> {
         match self.remove_op(val) {
             NotFound => None,
             Removed(v) => {
@@ -617,6 +656,47 @@ impl<T: Debug + PartialOrd> Node<T> {
             },
             // uhh, shouldn't ever happen if I've coded it right
             _ => panic!("Returned invalid option, tree structure damaged")
+        }
+    }
+
+    pub fn get<K: PartialOrd<T>>(&self, val: &K) -> Option<&T> {
+        let mut cur = self;
+        while !cur.is_leaf() {
+            let cur_val = cur.value();
+            if val == cur_val.unwrap() {
+                return cur_val;
+            } else if val < cur_val.unwrap() {
+                cur = cur.get_left();
+            } else {
+                cur = cur.get_right();
+            }
+        }
+        match cur {
+            Internal(n) => Some(&n.value),
+            _ => None
+        }
+    }
+
+    pub fn peek(&self, back: bool) -> Option<&T> {
+        let mut cur = self;
+        while !cur.is_leaf() {
+            if back {
+                if !cur.get_right().is_leaf() {
+                    cur = cur.get_right();
+                } else {
+                    break;
+                }
+            } else {
+                if !cur.get_left().is_leaf() {
+                    cur = cur.get_left();
+                } else {
+                    break;
+                }
+            }
+        }
+        match cur {
+            Internal(n) => Some(&n.value),
+            _ => None
         }
     }
 }

@@ -1,16 +1,18 @@
 mod node;
+#[macro_use]
+pub mod map;
 
 use node::Node;
 use node::Colour::Black;
 use node::Node::{Internal, Leaf};
 use std::fmt::{Debug, Display, Result, Formatter};
 
-pub struct RBTree<T: Debug + PartialOrd> {
+pub struct RBTree<T: PartialOrd> {
     root: Node<T>,
     contained: usize
 }
 
-fn ordered_insertion<'a, T: Debug + PartialOrd>(cur: &'a Node<T>, order: &mut Vec<&'a T>) {
+fn ordered_insertion<'a, T: PartialOrd>(cur: &'a Node<T>, order: &mut Vec<&'a T>) {
     if cur.is_leaf() {
         return;
     }
@@ -79,20 +81,92 @@ impl<T: PartialOrd + Debug> Debug for RBTree<T> {
     }
 }
 
-impl<T: Debug + PartialOrd> RBTree<T> {
+impl<T: PartialOrd> RBTree<T> {
+
+    /// Creates and returns a new RBTree.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(3);
+    /// t.insert(2);
+    /// assert_eq!(t.remove(&2).unwrap(), 2);
+    /// ```
     pub fn new() -> RBTree<T> {
         RBTree {root: Leaf(Black), contained: 0}
     }
+
+    /// Returns a vector presenting the contained
+    /// elements of the RBTree in the order by which
+    /// they are prioritised (that is, in the in-order
+    /// tree traversal order).
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(3);
+    /// t.insert(1);
+    /// t.insert(2);
+    /// let order = t.ordered();
+    /// assert_eq!(*order[1], 2);
+    /// ```
     pub fn ordered(&self) -> Vec<&T> {
         let mut order = Vec::new();
         ordered_insertion(&self.root, &mut order);
         order
     }
 
+    /// Returns the number of elements contained
+    /// in the tree.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(3);
+    /// t.insert(1);
+    /// t.insert(2);
+    /// assert_eq!(t.len(), 3);
+    /// t.remove(&2);
+    /// assert_eq!(t.len(), 2);
+    /// ```
     pub fn len(&self) -> usize {
         self.contained
     }
 
+    /// Returns true if there are no items
+    /// present in the tree, false otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// assert!(t.is_empty());
+    /// t.insert(3);
+    /// assert!(!t.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        if self.len() == 0 {
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Inserts a new element into the RBTree.
+    /// Returns None if this item was not already
+    /// in the tree, and the previously contained
+    /// item otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// assert_eq!(t.insert("Hello".to_string()), None);
+    /// assert_eq!(t.insert("Hello".to_string()), Some("Hello".to_string()));
+    /// ```
     pub fn insert(&mut self, val: T) -> Option<T> {
         match self.root.insert(val) {
             Some(v) => Some(v),
@@ -103,19 +177,73 @@ impl<T: Debug + PartialOrd> RBTree<T> {
         }
     }
 
-    // pub fn contains(&self, val: &T) -> bool {
-        
-    // }
+    /// Returns true if the tree contains the
+    /// specified item, false otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(2);
+    /// assert!(!t.contains(&3));
+    /// assert!(t.contains(&2));
+    /// ```
+    pub fn contains(&self, val: &T) -> bool {
+        !self.get(val).is_none()
+    }
 
-    // pub fn get(&self, val: &T) -> Option<&T> {
-
-    // }
+    /// Returns the item specified if contained,
+    /// None otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(1);
+    /// assert_eq!(*t.get(&1).unwrap(), 1);
+    /// assert_eq!(t.get(&2), None);
+    /// ```
+    /// This method can be useful especially in conjunction
+    /// with the "make_map" macro(s).
+    /// # Example:
+    /// ```
+    /// # #[macro_use(make_map_named, make_map)]
+    /// # extern crate rb_tree;
+    /// 
+    /// # fn main () {
+    /// use rb_tree::RBTree;
+    /// 
+    /// make_map_named!(MyMap{String, usize});
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(MyMap::new("Hello".to_string(), 0));
+    /// t.insert(MyMap::new("World".to_string(), 1));
+    /// assert_eq!(t.get(&"World".to_string()).unwrap().val, 1);
+    /// # }
+    /// 
+    /// ```
+    pub fn get<K: PartialOrd<T>>(&self, val: &K) -> Option<&T> {
+        self.root.get(val)
+    }
 
     // pub fn at(&self, index: usize) -> Option<&T> {
 
     // }
 
-    pub fn remove(&mut self, val: &T) -> Option<T> {
+    /// Removes an item the tree. Returns the matching item
+    /// if it was contained in the tree, None otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(4);
+    /// t.insert(2);
+    /// assert_eq!(t.remove(&2).unwrap(), 2);
+    /// assert_eq!(t.len(), 1);
+    /// assert_eq!(t.remove(&2), None);
+    /// ```
+    pub fn remove<K: PartialOrd<T>>(&mut self, val: &K) -> Option<T> {
         match self.root.remove(val) {
             Some(v) => {
                 self.contained -= 1;
@@ -125,13 +253,85 @@ impl<T: Debug + PartialOrd> RBTree<T> {
         }
     }
 
-    // pub fn pop(&mut self) -> Option<T> {
+    /// Removes the item at the front of the priority
+    /// queue that the RBTree represents if any elements
+    /// are present, or None otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(2);
+    /// t.insert(1);
+    /// t.insert(3);
+    /// assert_eq!(t.pop().unwrap(), 1);
+    /// ```
+    pub fn pop(&mut self) -> Option<T> {
+        match self.root.pop(false) {
+            Some(v) => {
+                self.contained -= 1;
+                Some(v)
+            },
+            None => None
+        }
+    }
 
-    // }
+    /// Peeks the item at the front of the priority
+    /// queue that the RBTree represents if any elements
+    /// are present, or None otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(2);
+    /// t.insert(1);
+    /// t.insert(3);
+    /// assert_eq!(*t.peek().unwrap(), 1);
+    /// ```
+    pub fn peek(&self) -> Option<&T> {
+        self.root.peek(false)
+    }
 
-    // pub fn peek(&self) -> Option<&T> {
+    /// Removes the item at the back of the priority
+    /// queue that the RBTree represents if any elements
+    /// are present, or None otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(2);
+    /// t.insert(1);
+    /// t.insert(3);
+    /// assert_eq!(t.pop_back().unwrap(), 3);
+    /// ```
+    pub fn pop_back(&mut self) -> Option<T> {
+        match self.root.pop(true) {
+            Some(v) => {
+                self.contained -= 1;
+                Some(v)
+            },
+            None => None
+        }
+    }
 
-    // }
+    /// Peeks the item at the back of the priority
+    /// queue that the RBTree represents if any elements
+    /// are present, or None otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(2);
+    /// t.insert(1);
+    /// t.insert(3);
+    /// assert_eq!(*t.peek_back().unwrap(), 3);
+    /// ```
+    pub fn peek_back(&self) -> Option<&T> {
+        self.root.peek(true)
+    }
 
 
 }
@@ -722,5 +922,104 @@ mod tests {
             2.0->R:1.0 2.0->___ 10.0->___ 10.0->___\n\
             1.0->___ 1.0->___"
         );
+    }
+
+    #[test]
+    fn test_get() {
+        let mut t = RBTree::new();
+        assert_eq!(t.get(&3), None);
+        t.insert(2);
+        t.insert(1);
+        t.insert(4);
+        assert_eq!(t.get(&3), None);
+        assert_eq!(*t.get(&4).unwrap(), 4);
+        assert_eq!(*t.get(&2).unwrap(), 2);
+        t.remove(&4);
+        assert_eq!(t.get(&4), None);
+    }
+
+    #[test]
+    fn test_pop() {
+        let mut t = RBTree::new();
+        t.insert(2);
+        t.insert(1);
+        t.insert(4);
+        assert_eq!(t.len(), 3);
+        assert_eq!(t.pop().unwrap(), 1);
+        assert_eq!(t.len(), 2);
+        assert_eq!(t.pop().unwrap(), 2);
+        assert_eq!(t.pop().unwrap(), 4);
+        assert_eq!(t.pop(), None);
+        assert_eq!(t.len(), 0);
+
+        t.insert(5);
+        t.insert(7);
+        t.insert(9);
+        t.insert(2);
+        t.insert(1);
+        t.insert(4);
+        assert_eq!(t.pop().unwrap(), 1);
+        assert_eq!(t.len(), 5);
+    }
+
+    #[test]
+    fn test_pop_back() {
+        let mut t = RBTree::new();
+        t.insert(2);
+        t.insert(1);
+        t.insert(4);
+        assert_eq!(t.len(), 3);
+        assert_eq!(t.pop_back().unwrap(), 4);
+        assert_eq!(t.len(), 2);
+        assert_eq!(t.pop_back().unwrap(), 2);
+        assert_eq!(t.pop_back().unwrap(), 1);
+        assert_eq!(t.pop_back(), None);
+        assert_eq!(t.len(), 0);
+
+        t.insert(5);
+        t.insert(7);
+        t.insert(9);
+        t.insert(2);
+        t.insert(1);
+        t.insert(4);
+        assert_eq!(t.pop_back().unwrap(), 9);
+        assert_eq!(t.len(), 5);
+    }
+
+    #[test]
+    fn test_peek() {
+        let mut t = RBTree::new();
+        t.insert(2);
+        t.insert(1);
+        t.insert(4);
+        assert_eq!(t.len(), 3);
+        assert_eq!(*t.peek().unwrap(), 1);
+        assert_eq!(*t.peek().unwrap(), 1);
+        assert_eq!(t.len(), 3);
+        t.remove(&2);
+        assert_eq!(*t.peek().unwrap(), 1);
+        t.remove(&1);
+        assert_eq!(*t.peek().unwrap(), 4);
+        t.remove(&4);
+        assert_eq!(t.peek(), None);
+    }
+
+
+    #[test]
+    fn test_peek_back() {
+        let mut t = RBTree::new();
+        t.insert(2);
+        t.insert(1);
+        t.insert(4);
+        assert_eq!(t.len(), 3);
+        assert_eq!(*t.peek_back().unwrap(), 4);
+        assert_eq!(*t.peek_back().unwrap(), 4);
+        assert_eq!(t.len(), 3);
+        t.remove(&2);
+        assert_eq!(*t.peek_back().unwrap(), 4);
+        t.remove(&4);
+        assert_eq!(*t.peek_back().unwrap(), 1);
+        t.remove(&1);
+        assert_eq!(t.peek(), None);
     }
 }
