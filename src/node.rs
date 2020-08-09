@@ -1,5 +1,4 @@
 use std::boxed::Box;
-use std::fmt::Debug;
 use std::ops::DerefMut;
 use std::mem::swap as m_swap;
 
@@ -243,78 +242,6 @@ impl<T: PartialOrd> Node<T> {
             Internal(n) => &mut n.r_child,
             Leaf(_) => self
         }
-    }
-
-    pub fn has_left(&self) -> bool {
-        if let Internal(n) = self {
-            !n.l_child.is_leaf()
-        } else {
-            false
-        }
-    }
-
-    pub fn has_right(&self) -> bool {
-        if let Internal(n) = self {
-            !n.r_child.is_leaf()
-        } else {
-            false
-        }
-    }
-
-    pub fn remove_left(&mut self) -> Node<T> {
-        match self {
-            Internal(n) => {
-                let mut rep = Leaf(Black);
-                m_swap(&mut rep, &mut n.l_child);
-                rep
-            },
-            Leaf(_) => Leaf(Black)
-        }
-    }
-
-    pub fn remove_right(&mut self) -> Node<T> {
-        match self {
-            Internal(n) => {
-                let mut rep = Leaf(Black);
-                m_swap(&mut rep, &mut n.r_child);
-                rep
-            },
-            Leaf(_) => Leaf(Black)
-        }
-    }
-
-    pub fn insert_left(&mut self, new_l: T) -> Node<T> {
-        let mut rep = Node::new(new_l);
-        match self {
-            Internal(n) => m_swap(&mut rep, &mut n.l_child),
-            Leaf(_) => m_swap(self, &mut rep)
-        }
-        rep
-    }
-
-    pub fn insert_right(&mut self, new_r: T) -> Node<T> {
-        let mut rep = Node::new(new_r);
-        match self {
-            Internal(n) => m_swap(&mut rep, &mut n.r_child),
-            Leaf(_) => m_swap(self, &mut rep)
-        }
-        rep
-    }
-
-    pub fn append_left(&mut self, mut rep: Node<T>) -> Node<T> {
-        match self {
-            Internal(n) => m_swap(&mut rep, &mut n.l_child),
-            Leaf(_) => m_swap(self, &mut rep)
-        }
-        rep
-    }
-
-    pub fn append_right(&mut self, mut rep: Node<T>) -> Node<T> {
-        match self {
-            Internal(n) => m_swap(&mut rep, &mut n.r_child),
-            Leaf(_) => m_swap(self, &mut rep)
-        }
-        rep
     }
 
     // panicing operators only used internally very carefully
