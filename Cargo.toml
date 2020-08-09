@@ -1,7 +1,13 @@
 [package]
 name = "rb_tree"
+description = "A Red Black Tree implementation in Rust"
 version = "0.1.0"
 authors = ["dbyr <david.michael.byrne17@gmail.com>"]
 edition = "2018"
-
-[dependencies]
+repository = "https://github.com/dbyr/rb_tree"
+homepage = "https://github.com/dbyr/rb_tree"
+readme = "README.md"
+keywords = ["red-black", "tree", "set", "self-balancing", "queue"]
+categories = ["data-structures"]
+license = "MIT OR Apache-2.0"
+exclude = [".github*", ".gitignore"]
