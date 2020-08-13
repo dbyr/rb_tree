@@ -144,6 +144,8 @@ impl<T: PartialOrd> Node<T> {
         )
     }
 
+    // method used for testing
+    #[allow(dead_code)]
     pub fn new_black(val: T) -> Node<T> {
         Internal(
             Innards{
@@ -163,7 +165,10 @@ impl<T: PartialOrd> Node<T> {
         }
     }
     pub fn is_red(&self) -> bool {
-        !self.is_black()
+        match self {
+            Internal(n) => n.is_red(),
+            _ => false
+        }
     }
     pub fn is_double_black(&self) -> bool {
         match self {
@@ -230,6 +235,8 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
+    // methods used for testing
+    #[allow(dead_code)]
     pub fn get_left_mut(&mut self) -> &mut Node<T> {
         match self {
             Internal(n) => &mut n.l_child,
@@ -237,6 +244,7 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_right_mut(&mut self) -> &mut Node<T> {
         match self {
             Internal(n) => &mut n.r_child,
