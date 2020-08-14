@@ -8,10 +8,12 @@ use node::Node;
 use node::Colour::Black;
 use node::Node::{Internal, Leaf};
 use std::fmt::{Debug, Display, Result, Formatter};
+use std::cmp::Ordering;
 
 pub struct RBTree<T: PartialOrd> {
     root: Node<T>,
-    contained: usize
+    contained: usize,
+    order: Option<Box<Fn(T, T) -> Ordering>>
 }
 
 fn ordered_insertion<'a, T: PartialOrd>(cur: &'a Node<T>, order: &mut Vec<&'a T>) {
@@ -96,7 +98,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(t.remove(&2).unwrap(), 2);
     /// ```
     pub fn new() -> RBTree<T> {
-        RBTree {root: Leaf(Black), contained: 0}
+        RBTree {root: Leaf(Black), contained: 0, order: None}
     }
 
     /// Returns a vector presenting the contained
