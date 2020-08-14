@@ -20,12 +20,46 @@ fn test_add_existing() {
     let mut t = RBTree::new();
     assert_eq!(t.insert(2), None);
     assert_eq!(t.insert(2), Some(2));
+    assert_eq!(t.len(), 1);
+}
+
+#[test]
+fn test_ordered() {
+    let mut t = RBTree::new();
+    assert_eq!(t.ordered(), Vec::<&usize>::new());
+    t.insert(23);
+    t.insert(2);
+    t.insert(3);
+    t.insert(12);
+    assert_eq!(t.ordered(), vec!(&2, &3, &12, &23));
+}
+
+#[test]
+fn test_contains_and_is_empty() {
+    let mut t = RBTree::new();
+    assert_eq!(t.is_empty(), true);
+    assert_eq!(t.contains(&3), false);
+    t.insert(23);
+    assert_eq!(t.is_empty(), false);
+    t.insert(2);
+    t.insert(3);
+    t.insert(12);
+    assert_eq!(t.is_empty(), false);
+    assert_eq!(t.contains(&23), true);
+    assert_eq!(t.contains(&3), true);
+    t.remove(&3);
+    assert_eq!(t.contains(&3), false);
+    assert_eq!(t.contains(&2), true);
+    assert_eq!(t.contains(&12), true);
+    assert_eq!(t.contains(&4), false);
+    assert_eq!(t.contains(&-3), false);
+    assert_eq!(t.is_empty(), false);
 }
 
 // "cases" refer to this document here:
 // https://www.usna.edu/Users/cs/crabbe/SI321/current/red-black/red-black.html
 #[test]
-fn test_case1_left() {
+fn test_insertion_case1_left() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -44,7 +78,7 @@ fn test_case1_left() {
 }
 
 #[test]
-fn test_case1_right() {
+fn test_insertion_case1_right() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -63,7 +97,7 @@ fn test_case1_right() {
 }
 
 #[test]
-fn test_case2_right() {
+fn test_insertion_case2_right() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -82,7 +116,7 @@ fn test_case2_right() {
 }
 
 #[test]
-fn test_case2_left() {
+fn test_insertion_case2_left() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -101,7 +135,7 @@ fn test_case2_left() {
 }
 
 #[test]
-fn test_case3_at_root() {
+fn test_insertion_case3_at_root() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -119,7 +153,7 @@ fn test_case3_at_root() {
 }
 
 #[test]
-fn test_case3_not_root() {
+fn test_insertion_case3_not_root() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -596,6 +630,20 @@ fn test_get() {
     assert_eq!(*t.get(&2).unwrap(), 2);
     t.remove(&4);
     assert_eq!(t.get(&4), None);
+}
+
+#[test]
+fn test_maps() {
+    let mut t = RBTree::new();
+    make_map!(String, String);
+    t.insert(Mapper::new("hello".to_string(), "world".to_string()));
+    t.insert(Mapper::new("foo".to_string(), "bar".to_string()));
+    t.insert(Mapper::new("square".to_string(), "root".to_string()));
+    assert_eq!(t.get(&"hello".to_string()).unwrap().val, "world");
+    assert_eq!(t.get(&"square".to_string()).unwrap().val, "root");
+    assert_eq!(t.get(&"foo".to_string()).unwrap().val, "bar");
+    assert_eq!(t.pop().unwrap().val, "bar");
+    assert_eq!(t.remove(&"hello".to_string()).unwrap().val, "world");
 }
 
 #[test]
