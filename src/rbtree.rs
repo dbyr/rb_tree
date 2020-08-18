@@ -37,7 +37,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// let mut t = RBTree::new();
     /// t.insert(3);
     /// t.insert(2);
-    /// assert_eq!(t.remove(&2).unwrap(), 2);
+    /// assert_eq!(t.take(&2).unwrap(), 2);
     /// ```
     pub fn new() -> RBTree<T> {
         RBTree {root: Leaf(Black), contained: 0}
@@ -71,8 +71,8 @@ impl<T: PartialOrd> RBTree<T> {
     /// tree.insert(5);
     /// assert_eq!(tree.len(), 2);
     /// let mut drain = tree.drain();
-    /// assert_eq!(drain.next(), 2);
-    /// assert_eq!(drain.next(), 5);
+    /// assert_eq!(drain.next().unwrap(), 2);
+    /// assert_eq!(drain.next().unwrap(), 5);
     /// assert!(drain.next().is_none());
     /// assert_eq!(tree.len(), 0);
     /// ```
@@ -141,6 +141,27 @@ impl<T: PartialOrd> RBTree<T> {
     }
 
     /// Inserts a new element into the RBTree.
+    /// Returns true if this item was not already
+    /// in the tree, and false otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// assert_eq!(t.insert("Hello".to_string()), true);
+    /// assert_eq!(t.insert("Hello".to_string()), false);
+    /// ```
+    pub fn insert(&mut self, val: T) -> bool {
+        match self.root.insert(val) {
+            Some(_) => false,
+            None => {
+                self.contained += 1;
+                true
+            }
+        }
+    }
+
+    /// Inserts a new element into the RBTree.
     /// Returns None if this item was not already
     /// in the tree, and the previously contained
     /// item otherwise.
@@ -149,10 +170,10 @@ impl<T: PartialOrd> RBTree<T> {
     /// use rb_tree::RBTree;
     /// 
     /// let mut t = RBTree::new();
-    /// assert_eq!(t.insert("Hello".to_string()), None);
-    /// assert_eq!(t.insert("Hello".to_string()), Some("Hello".to_string()));
+    /// assert_eq!(t.replace("Hello".to_string()), None);
+    /// assert_eq!(t.replace("Hello".to_string()), Some("Hello".to_string()));
     /// ```
-    pub fn insert(&mut self, val: T) -> Option<T> {
+    pub fn replace(&mut self, val: T) -> Option<T> {
         match self.root.insert(val) {
             Some(v) => Some(v),
             None => {
@@ -209,17 +230,40 @@ impl<T: PartialOrd> RBTree<T> {
     /// let mut t = RBTree::new();
     /// t.insert(4);
     /// t.insert(2);
-    /// assert_eq!(t.remove(&2).unwrap(), 2);
+    /// assert_eq!(t.take(&2).unwrap(), 2);
     /// assert_eq!(t.len(), 1);
-    /// assert_eq!(t.remove(&2), None);
+    /// assert_eq!(t.take(&2), None);
     /// ```
-    pub fn remove<K: PartialOrd<T>>(&mut self, val: &K) -> Option<T> {
+    pub fn take<K: PartialOrd<T>>(&mut self, val: &K) -> Option<T> {
         match self.root.remove(val) {
             Some(v) => {
                 self.contained -= 1;
                 Some(v)
             },
             None => None
+        }
+    }
+
+    /// Removes an item the tree. Returns true
+    /// if it was contained in the tree, false otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(4);
+    /// t.insert(2);
+    /// assert_eq!(t.remove(&2), true);
+    /// assert_eq!(t.len(), 1);
+    /// assert_eq!(t.remove(&2), false);
+    /// ```
+    pub fn remove<K: PartialOrd<T>>(&mut self, val: &K) -> bool {
+        match self.root.remove(val) {
+            Some(_) => {
+                self.contained -= 1;
+                true
+            },
+            None => false
         }
     }
 

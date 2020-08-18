@@ -18,8 +18,8 @@ fn test_print() {
 #[test]
 fn test_add_existing() {
     let mut t = RBTree::new();
-    assert_eq!(t.insert(2), None);
-    assert_eq!(t.insert(2), Some(2));
+    assert_eq!(t.replace(2), None);
+    assert_eq!(t.replace(2), Some(2));
     assert_eq!(t.len(), 1);
 }
 
@@ -281,7 +281,7 @@ fn test_complex_insertion() {
 #[test]
 fn test_removal_empty() {
     let mut t = RBTree::new();
-    assert!(t.remove(&3.0).is_none());
+    assert!(t.take(&3.0).is_none());
     assert_eq!(t.contained, 0);
 }
 
@@ -292,11 +292,11 @@ fn test_removal_notfound() {
     t.insert(1.0);
     t.insert(3.0);
     t.insert(1.5);
-    assert!(t.remove(&0.0).is_none());
-    assert!(t.remove(&1.2).is_none());
-    assert!(t.remove(&1.8).is_none());
-    assert!(t.remove(&2.1).is_none());
-    assert!(t.remove(&3.9).is_none());
+    assert!(t.take(&0.0).is_none());
+    assert!(t.take(&1.2).is_none());
+    assert!(t.take(&1.8).is_none());
+    assert!(t.take(&2.1).is_none());
+    assert!(t.take(&3.9).is_none());
     assert_eq!(t.contained, 4);
     assert_eq!(
         format!("{}", t),
@@ -309,7 +309,7 @@ fn test_remove_only_value() {
     let mut t = RBTree::new();
     t.insert(1);
     assert_eq!(t.len(), 1);
-    assert_eq!(t.remove(&1).unwrap(), 1);
+    assert_eq!(t.take(&1).unwrap(), 1);
     assert_eq!(t.len(), 0);
 }
 
@@ -319,12 +319,12 @@ fn test_remove_root() {
     t.insert(2.0);
     t.insert(1.0);
     t.insert(3.0);
-    assert_eq!(t.remove(&2.0).unwrap(), 2.0);
+    assert_eq!(t.take(&2.0).unwrap(), 2.0);
     assert_eq!(
         format!("{:?}", t),
         "B:3.0\n3.0->R:1.0 3.0->___\n1.0->___ 1.0->___"
     );
-    assert_eq!(t.remove(&3.0).unwrap(), 3.0);
+    assert_eq!(t.take(&3.0).unwrap(), 3.0);
     assert_eq!(
         format!("{:?}", t),
         "B:1.0\n1.0->___ 1.0->___"
@@ -336,7 +336,7 @@ fn test_remove_root() {
     t.insert(3.0);
     t.insert(1.5);
     t.insert(4.0);
-    assert_eq!(t.remove(&2.0).unwrap(), 2.0);
+    assert_eq!(t.take(&2.0).unwrap(), 2.0);
     assert_eq!(
         format!("{:?}", t),
         "B:3.0\n\
@@ -345,7 +345,7 @@ fn test_remove_root() {
         1.5->___ 1.5->___"
     );
     t.insert(3.5);
-    assert_eq!(t.remove(&3.0).unwrap(), 3.0);
+    assert_eq!(t.take(&3.0).unwrap(), 3.0);
     assert_eq!(
         format!("{:?}", t),
         "B:3.5\n\
@@ -367,7 +367,7 @@ fn test_removal_no_double_black() {
     t.insert(2.5);
     println!("{:?}", t);
     
-    assert_eq!(t.remove(&1.0).unwrap(), 1.0);
+    assert_eq!(t.take(&1.0).unwrap(), 1.0);
     println!("{:?}", t);
     assert_eq!(
         format!("{:?}", t),
@@ -385,7 +385,7 @@ fn test_removal_simple_case() {
     t.insert(20);
     t.insert(40);
     t.insert(10);
-    assert_eq!(t.remove(&10).unwrap(), 10);
+    assert_eq!(t.take(&10).unwrap(), 10);
     assert_eq!(
         format!("{:?}", t),
         "B:30\n\
@@ -407,7 +407,7 @@ fn test_black_leaf_removal() {
     t.insert(90);
     t.insert(92);
     t.remove(&92); // adding & removing causes colour change
-    assert_eq!(t.remove(&90).unwrap(), 90);
+    assert_eq!(t.take(&90).unwrap(), 90);
     assert_eq!(
         format!("{:?}", t),
         "B:65\n\
@@ -435,7 +435,7 @@ fn test_remove_accumulative_changes() {
     t.remove(&92); // adding & removing causes colour change
     t.remove(&90);
     t.remove(&80);
-    assert_eq!(t.remove(&70).unwrap(), 70);
+    assert_eq!(t.take(&70).unwrap(), 70);
     assert_eq!(
         format!("{:?}", t),
         "B:50\n\
@@ -454,7 +454,7 @@ fn test_removal_case2_inner() {
     t.insert(35);
     t.insert(50);
     println!("{:?}", t);
-    assert_eq!(t.remove(&20).unwrap(), 20);
+    assert_eq!(t.take(&20).unwrap(), 20);
     println!("{:?}", t);
     assert_eq!(
         format!("{:?}", t),
@@ -471,7 +471,7 @@ fn test_removal_case2_inner() {
     t.insert(2);
     t.insert(7);
     t.insert(6);
-    assert_eq!(t.remove(&2).unwrap(), 2);
+    assert_eq!(t.take(&2).unwrap(), 2);
     assert_eq!(
         format!("{:?}", t),
         "B:8\n\
@@ -489,7 +489,7 @@ fn test_removal_case2_outer() {
     t.insert(40);
     t.insert(50);
     println!("{:?}", t);
-    assert_eq!(t.remove(&20).unwrap(), 20);
+    assert_eq!(t.take(&20).unwrap(), 20);
     println!("{:?}", t);
     assert_eq!(
         format!("{:?}", t),
@@ -512,7 +512,7 @@ fn test_removal_case2_outer() {
     t.insert(13);
     t.insert(17);
     t.insert(14);
-    assert_eq!(t.remove(&5).unwrap(), 5);
+    assert_eq!(t.take(&5).unwrap(), 5);
     assert_eq!(
         format!("{:?}", t),
         "B:10\n\
@@ -522,8 +522,8 @@ fn test_removal_case2_outer() {
         4->___ 4->___ 8->___ 8->___ 13->___ 13->R:14 17->___ 17->___\n\
         14->___ 14->___"
     );
-    assert_eq!(t.remove(&6).unwrap(), 6);
-    assert_eq!(t.remove(&7).unwrap(), 7);
+    assert_eq!(t.take(&6).unwrap(), 6);
+    assert_eq!(t.take(&7).unwrap(), 7);
     assert_eq!(
         format!("{:?}", t),
         "B:10\n\
@@ -533,7 +533,7 @@ fn test_removal_case2_outer() {
         13->___ 13->R:14 17->___ 17->___\n\
         14->___ 14->___"
     );
-    assert_eq!(t.remove(&4).unwrap(), 4);
+    assert_eq!(t.take(&4).unwrap(), 4);
     assert_eq!(
         format!("{:?}", t),
         "B:12\n\
@@ -556,7 +556,7 @@ fn test_removal_case3_red_parent() {
     t.insert(7);
     t.remove(&5);
     t.remove(&7);
-    assert_eq!(t.remove(&3).unwrap(), 3);
+    assert_eq!(t.take(&3).unwrap(), 3);
     assert_eq!(
         format!("{:?}", t),
         "B:2\n\
@@ -575,7 +575,7 @@ fn test_removeal_case4() {
     t.insert(3);
     t.insert(5);
     t.insert(6);
-    assert_eq!(t.remove(&1).unwrap(), 1);
+    assert_eq!(t.take(&1).unwrap(), 1);
     assert_eq!(
         format!("{:?}", t),
         "B:4\n\
@@ -630,20 +630,6 @@ fn test_get() {
     assert_eq!(*t.get(&2).unwrap(), 2);
     t.remove(&4);
     assert_eq!(t.get(&4), None);
-}
-
-#[test]
-fn test_maps() {
-    let mut t = RBTree::new();
-    make_map!(String, String);
-    t.insert(Mapper::new("hello".to_string(), "world".to_string()));
-    t.insert(Mapper::new("foo".to_string(), "bar".to_string()));
-    t.insert(Mapper::new("square".to_string(), "root".to_string()));
-    assert_eq!(t.get(&"hello".to_string()).unwrap().val, "world");
-    assert_eq!(t.get(&"square".to_string()).unwrap().val, "root");
-    assert_eq!(t.get(&"foo".to_string()).unwrap().val, "bar");
-    assert_eq!(t.pop().unwrap().val, "bar");
-    assert_eq!(t.remove(&"hello".to_string()).unwrap().val, "world");
 }
 
 #[test]
