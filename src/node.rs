@@ -197,6 +197,13 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
+    fn value_mut(&mut self) -> Option<&mut T> {
+        match self {
+            Internal(n) => Some(&mut n.value),
+            Leaf(_) => None
+        }
+    }
+
     pub fn swap_colour(&mut self) {
         if let Internal(n) = self {
             n.swap_colour();
@@ -608,6 +615,24 @@ impl<T: PartialOrd> Node<T> {
         }
         match cur {
             Internal(n) => Some(&n.value),
+            _ => None
+        }
+    }
+
+    pub fn get_mut<K: PartialOrd<T>>(&mut self, val: &K) -> Option<&mut T> {
+        let mut cur = self;
+        while !cur.is_leaf() {
+            let cmp = cur.value().unwrap();
+            if val == cmp {
+                return cur.value_mut();
+            } else if val < cmp {
+                cur = cur.get_left_mut();
+            } else {
+                cur = cur.get_right_mut();
+            }
+        }
+        match cur {
+            Internal(n) => Some(&mut n.value),
             _ => None
         }
     }
