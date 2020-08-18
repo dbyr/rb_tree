@@ -58,7 +58,8 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     }
 
     /// Clears the map and returns an iterator
-    /// over all key-value pairs that were contained.
+    /// over all key-value pairs that were contained
+    /// in the order of their keys' PartialOrd order.
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;

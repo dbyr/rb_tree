@@ -43,11 +43,44 @@ impl<T: PartialOrd> RBTree<T> {
         RBTree {root: Leaf(Black), contained: 0}
     }
 
-    /// Clears the tree and returns all values
-    /// as an iterator.
-    // pub fn drain(&mut self) -> Drain<T> {
+    /// Clears all entries from the tree.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut tree = RBTree::new();
+    /// tree.insert(2);
+    /// tree.insert(5);
+    /// tree.clear();
+    /// assert_eq!(tree.len(), 0);
+    /// assert!(!tree.contains(&2));
+    /// ```
+    pub fn clear(&mut self) {
+        self.root = Leaf(Black);
+        self.contained = 0;
+    }
 
-    // }
+    /// Clears the tree and returns all values
+    /// as an iterator in their PartialOrd order.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut tree = RBTree::new();
+    /// tree.insert(2);
+    /// tree.insert(5);
+    /// assert_eq!(tree.len(), 2);
+    /// let mut drain = tree.drain();
+    /// assert_eq!(drain.next(), 2);
+    /// assert_eq!(drain.next(), 5);
+    /// assert!(drain.next().is_none());
+    /// assert_eq!(tree.len(), 0);
+    /// ```
+    pub fn drain(&mut self) -> Drain<T> {
+        let mut rep = RBTree::new();
+        std::mem::swap(&mut rep, self);
+        Drain {tree: rep}
+    }
 
     /// Returns a vector presenting the contained
     /// elements of the RBTree in the order by which
