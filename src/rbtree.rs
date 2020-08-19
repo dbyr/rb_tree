@@ -554,6 +554,26 @@ impl<T: PartialOrd> RBTree<T> {
     pub fn is_superset(&self, other: &RBTree<T>) -> bool {
         other.intersection(self).collect::<Vec<&T>>().len() == other.len()
     }
+
+    /// Retains in this RBTree only those values for which 
+    /// the passed closure returns true.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t: RBTree<usize> = (0..10).collect();
+    /// t.retain(|v| v % 2 == 0);
+    /// assert_eq!(t.iter().collect::<Vec<&usize>>(), vec!(&0, &2, &4, &6, &8));
+    /// ```
+    pub fn retain<F: FnMut(&T) -> bool>(&mut self, mut f: F) {
+        let mut rep = RBTree::new();
+        while let Some(v) = self.pop() {
+            if f(&v) {
+                rep.insert(v);
+            }
+        }
+        std::mem::swap(&mut rep, self);
+    }
 }
 
 pub struct IntoIter<T: PartialOrd> {
