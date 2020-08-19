@@ -4,7 +4,7 @@ use crate::node::Colour::Black;
 use crate::node::Node::Leaf;
 use std::fmt::{Debug, Display, Result, Formatter};
 use crate::helpers::{write_to_level, ordered_insertion};
-use std::iter::{ExactSizeIterator, FusedIterator};
+use std::iter::{ExactSizeIterator, FusedIterator, FromIterator};
 
 impl<T: PartialOrd + Debug> Debug for RBTree<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -347,7 +347,246 @@ impl<T: PartialOrd> RBTree<T> {
         self.root.peek(true)
     }
 
+    /// Returns an iterator over the elements
+    /// contained in this RBTree.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(3);
+    /// t.insert(1);
+    /// t.insert(5);
+    /// assert_eq!(t.iter().collect::<Vec<&usize>>(), vec!(&1, &3, &5));
+    /// ```
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            pos: 0,
+            ordered: self.ordered()
+        }
+    }
 
+    /// Returns an iterator representing the
+    /// difference between the items in this RBTree
+    /// and those in another RBTree, i.e. the values
+    /// in `self` but not in `other`.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t1 = RBTree::new();
+    /// let mut t2 = RBTree::new();
+    /// (0..3).for_each(|v| {t1.insert(v);});
+    /// (2..5).for_each(|v| {t2.insert(v);});
+    /// assert_eq!(
+    ///     t1.difference(&t2).collect::<Vec<&usize>>(),
+    ///     vec!(&0, &1)
+    /// );
+    /// assert_eq!(
+    ///     t2.difference(&t1).collect::<Vec<&usize>>(),
+    ///     vec!(&3, &4)
+    /// );
+    /// ```
+    pub fn difference<'a>(
+        &'a self,
+        other: &'a RBTree<T>
+    ) -> Difference<'a, T> {
+        let mut iterl = self.iter();
+        let mut iterr = other.iter();
+        Difference {
+            nextl: iterl.next(),
+            nextr: iterr.next(),
+            left: iterl,
+            right: iterr
+        }
+    }
+
+    /// Returns an iterator representing the
+    /// symmetric difference between the items
+    /// in this RBTree and those in another, i.e.
+    /// the values in `self` or `other` but not in both.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t1 = RBTree::new();
+    /// let mut t2 = RBTree::new();
+    /// (0..3).for_each(|v| {t1.insert(v);});
+    /// (2..5).for_each(|v| {t2.insert(v);});
+    /// assert_eq!(
+    ///     t1.symmetric_difference(&t2).collect::<Vec<&usize>>(),
+    ///     vec!(&0, &1, &3, &4)
+    /// );
+    /// assert_eq!(
+    ///     t2.symmetric_difference(&t1).collect::<Vec<&usize>>(),
+    ///     vec!(&0, &1, &3, &4)
+    /// );
+    /// ```
+    pub fn symmetric_difference<'a>(
+        &'a self,
+        other: &'a RBTree<T>
+    ) -> SymmetricDifference<'a, T> {
+        let mut iterl = self.iter();
+        let mut iterr = other.iter();
+        SymmetricDifference {
+            nextl: iterl.next(),
+            nextr: iterr.next(),
+            left: iterl,
+            right: iterr
+        }
+    }
+
+    /// Returns an iterator representing the intersection
+    /// of this RBTree and another, i.e. the values that
+    /// appear in both `self` and `other`.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t1 = RBTree::new();
+    /// let mut t2 = RBTree::new();
+    /// (0..3).for_each(|v| {t1.insert(v);});
+    /// (2..5).for_each(|v| {t2.insert(v);});
+    /// assert_eq!(
+    ///     t1.intersection(&t2).collect::<Vec<&usize>>(),
+    ///     vec!(&2)
+    /// );
+    /// ```
+    pub fn intersection<'a>(
+        &'a self,
+        other: &'a RBTree<T>
+    ) -> Intersection<'a, T> {
+        let mut iterl = self.iter();
+        let mut iterr = other.iter();
+        Intersection {
+            nextl: iterl.next(),
+            nextr: iterr.next(),
+            left: iterl,
+            right: iterr
+        }
+    }
+
+    /// Returns an iterator representing the union
+    /// of this RBTree and another, i.e. the values
+    /// that appear in at least one of the RBTrees.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t1 = RBTree::new();
+    /// let mut t2 = RBTree::new();
+    /// (0..3).for_each(|v| {t1.insert(v);});
+    /// (2..5).for_each(|v| {t2.insert(v);});
+    /// assert_eq!(
+    ///     t1.union(&t2).collect::<Vec<&usize>>(),
+    ///     vec!(&0, &1, &2, &3, &4)
+    /// );
+    /// ```
+    pub fn union<'a>(
+        &'a self,
+        other: &'a RBTree<T>
+    ) -> Union<'a, T> {
+        let mut iterl = self.iter();
+        let mut iterr = other.iter();
+        Union {
+            nextl: iterl.next(),
+            nextr: iterr.next(),
+            left: iterl,
+            right: iterr
+        }
+    }
+
+    /// Returns true if this RBTree and another are disjoint,
+    /// i.e. there are no values in `self` that appear in `other`
+    /// and vice versa, false otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t1 = RBTree::new();
+    /// let mut t2 = RBTree::new();
+    /// (0..3).for_each(|v| {t1.insert(v);});
+    /// (2..5).for_each(|v| {t2.insert(v);});
+    /// assert!(!t1.is_disjoint(&t2));
+    /// t2.pop(); // remove '2' from t2
+    /// assert!(t1.is_disjoint(&t2));
+    /// ```
+    pub fn is_disjoint(&self, other: &RBTree<T>) -> bool {
+        self.intersection(other).next().is_none()
+    }
+
+    /// Returns true if this RBTree is a subset of another,
+    /// i.e. at least all values in `self` also appear in
+    /// `other`, false otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t1 = RBTree::new();
+    /// let mut t2 = RBTree::new();
+    /// let mut t3 = RBTree::new();
+    /// (0..3).for_each(|v| {t1.insert(v);});
+    /// (2..10).for_each(|v| {t2.insert(v);});
+    /// (3..7).for_each(|v| {t3.insert(v);});
+    /// assert!(!t1.is_subset(&t2));
+    /// assert!(t3.is_subset(&t2));
+    /// ```
+    pub fn is_subset(&self, other: &RBTree<T>) -> bool {
+        self.intersection(other).collect::<Vec<&T>>().len() == self.len()
+    }
+
+    /// Returns true if this RBTree is a superset of another,
+    /// i.e. at least all values in `other` also appear in
+    /// `self`, false otherwise.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBTree;
+    /// 
+    /// let mut t1 = RBTree::new();
+    /// let mut t2 = RBTree::new();
+    /// let mut t3 = RBTree::new();
+    /// (0..3).for_each(|v| {t1.insert(v);});
+    /// (2..10).for_each(|v| {t2.insert(v);});
+    /// (3..7).for_each(|v| {t3.insert(v);});
+    /// assert!(!t2.is_superset(&t1));
+    /// assert!(t2.is_superset(&t3));
+    /// ```
+    pub fn is_superset(&self, other: &RBTree<T>) -> bool {
+        other.intersection(self).collect::<Vec<&T>>().len() == other.len()
+    }
+}
+
+pub struct IntoIter<T: PartialOrd> {
+    tree: RBTree<T>
+}
+
+impl<T: PartialOrd> Iterator for IntoIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        self.tree.pop()
+    }
+}
+
+impl<T: PartialOrd> IntoIterator for RBTree<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> IntoIter<T> {
+        IntoIter {
+            tree: self
+        }
+    }
+}
+
+impl<T: PartialOrd> FromIterator<T> for RBTree<T> {
+    fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
+        let mut tree = RBTree::new();
+        for i in iter {
+            tree.insert(i);
+        }
+        tree
+    }
 }
 
 pub struct Drain<T: PartialOrd> {
@@ -369,3 +608,202 @@ impl<T: PartialOrd> ExactSizeIterator for Drain<T> {
 }
 
 impl<T: PartialOrd> FusedIterator for Drain<T> {}
+
+pub struct Iter<'a, T: PartialOrd> {
+    pos: usize,
+    ordered: Vec<&'a T>
+}
+
+impl<'a, T: PartialOrd> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+        let ret = self.ordered.get(self.pos);
+        match ret {
+            Some(v) => {
+                self.pos += 1;
+                Some(*v)
+            },
+            None => None
+        }
+    }
+}
+
+impl<'a, T: PartialOrd> ExactSizeIterator for Iter<'a, T> {
+    fn len(&self) -> usize {
+        self.ordered.len() - self.pos
+    }
+}
+
+impl<'a, T: PartialOrd> FusedIterator for Iter<'a, T> {}
+
+pub struct Difference<'a, T: PartialOrd> {
+    nextl: Option<&'a T>,
+    nextr: Option<&'a T>,
+    left: Iter<'a, T>,
+    right: Iter<'a, T>
+}
+
+impl<'a, T: PartialOrd> Iterator for Difference<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+
+        // select and store the next next
+        let mut res = None;
+        'left: while let Some(vl) = self.nextl {
+            self.nextl = self.left.next();
+            'right: while let Some(vr) = self.nextr {
+                if vl < vr {
+                    res = Some(vl);
+                    break 'left;
+                } else if vl == vr {
+                    self.nextr = self.right.next();
+                    continue 'left;
+                } else {
+                    self.nextr = self.right.next();
+                }
+            }
+            res = Some(vl);
+            break; // don't want to skip values
+        }
+
+        // return the current next value
+        res
+    }
+}
+
+impl<'a, T: PartialOrd> FusedIterator for Difference<'a, T> {}
+
+pub struct SymmetricDifference<'a, T: PartialOrd> {
+    nextl: Option<&'a T>,
+    nextr: Option<&'a T>,
+    left: Iter<'a, T>,
+    right: Iter<'a, T>
+}
+
+impl<'a, T: PartialOrd> Iterator for SymmetricDifference<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+
+        // select and store the next next
+        let mut res = None;
+        'left: while let Some(vl) = self.nextl {
+            'right: while let Some(vr) = self.nextr {
+                if vl < vr {
+                    self.nextl = self.left.next();
+                    res = Some(vl);
+                    break 'left;
+                } else if vl == vr {
+                    self.nextl = self.left.next();
+                    self.nextr = self.right.next();
+                    continue 'left;
+                } else {
+                    self.nextr = self.right.next();
+                    res = Some(vr);
+                    break 'left;
+                }
+            }
+
+            // don't want to skip values
+            self.nextl = self.left.next();
+            res = Some(vl);
+            break;
+        }
+        if res.is_none() {
+            res = self.nextr;
+            self.nextr = self.right.next();
+        }
+
+        // return the current next value
+        res
+    }
+}
+
+impl<'a, T: PartialOrd> FusedIterator for SymmetricDifference<'a, T> {}
+
+pub struct Intersection<'a, T: PartialOrd> {
+    nextl: Option<&'a T>,
+    nextr: Option<&'a T>,
+    left: Iter<'a, T>,
+    right: Iter<'a, T>
+}
+
+impl<'a, T: PartialOrd> Iterator for Intersection<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+
+        // select and store the next next
+        let mut res = None;
+        'left: while let Some(vl) = self.nextl {
+            'right: while let Some(vr) = self.nextr {
+                if vl < vr {
+                    self.nextl = self.left.next();
+                    continue 'left;
+                } else if vl == vr {
+                    self.nextr = self.right.next();
+                    self.nextl = self.left.next();
+                    res = Some(vl);
+                    break 'left;
+                } else {
+                    self.nextr = self.right.next();
+                }
+            }
+            break; // don't bother iterating the remaining lefts
+        }
+
+        // return the current next value
+        res
+    }
+}
+
+impl<'a, T: PartialOrd> FusedIterator for Intersection<'a, T> {}
+
+pub struct Union<'a, T: PartialOrd> {
+    nextl: Option<&'a T>,
+    nextr: Option<&'a T>,
+    left: Iter<'a, T>,
+    right: Iter<'a, T>
+}
+
+impl<'a, T: PartialOrd> Iterator for Union<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+
+        // select and store the next next
+        let mut res = None;
+        'left: while let Some(vl) = self.nextl {
+            'right: while let Some(vr) = self.nextr {
+                if vl < vr {
+                    self.nextl = self.left.next();
+                    res = Some(vl);
+                    break 'left;
+                } else if vl == vr {
+                    self.nextr = self.right.next();
+                    self.nextl = self.left.next();
+                    res = Some(vl);
+                    break 'left;
+                } else {
+                    self.nextr = self.right.next();
+                    res = Some(vr);
+                    break 'left;
+                }
+            }
+            self.nextl = self.left.next();
+            res = Some(vl);
+            break; // don't skip values
+        }
+        if res.is_none() {
+            res = self.nextr;
+            self.nextr = self.right.next();
+        }
+
+        // return the current next value
+        res
+    }
+}
+
+impl<'a, T: PartialOrd> FusedIterator for Union<'a, T> {}
