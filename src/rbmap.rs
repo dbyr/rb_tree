@@ -162,7 +162,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.len(), 2);
     /// ```
     pub fn insert(&mut self, key: K, val: V) -> Option<(K, V)> {
-        match self.map.insert(
+        match self.map.replace(
             Mapper::new(key, Some(val))
         ) {
             Some(v) => Some(v.consume()),
@@ -217,7 +217,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.remove(&2).unwrap(), 4);
     /// ```
     pub fn remove(&mut self, key: &K) -> Option<V> {
-        match self.map.remove(
+        match self.map.take(
             &Mapper::new(key, None)
         ) {
             Some(v) => Some(v.consume().1),
@@ -238,7 +238,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.remove_entry(&2).unwrap(), (2, 4));
     /// ```
     pub fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
-        match self.map.remove(
+        match self.map.take(
             &Mapper::new(key, None)
         ) {
             Some(v) => Some(v.consume()),

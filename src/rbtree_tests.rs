@@ -18,14 +18,48 @@ fn test_print() {
 #[test]
 fn test_add_existing() {
     let mut t = RBTree::new();
-    assert_eq!(t.insert(2), None);
-    assert_eq!(t.insert(2), Some(2));
+    assert_eq!(t.replace(2), None);
+    assert_eq!(t.replace(2), Some(2));
+    assert_eq!(t.len(), 1);
+}
+
+#[test]
+fn test_ordered() {
+    let mut t = RBTree::new();
+    assert_eq!(t.ordered(), Vec::<&usize>::new());
+    t.insert(23);
+    t.insert(2);
+    t.insert(3);
+    t.insert(12);
+    assert_eq!(t.ordered(), vec!(&2, &3, &12, &23));
+}
+
+#[test]
+fn test_contains_and_is_empty() {
+    let mut t = RBTree::new();
+    assert_eq!(t.is_empty(), true);
+    assert_eq!(t.contains(&3), false);
+    t.insert(23);
+    assert_eq!(t.is_empty(), false);
+    t.insert(2);
+    t.insert(3);
+    t.insert(12);
+    assert_eq!(t.is_empty(), false);
+    assert_eq!(t.contains(&23), true);
+    assert_eq!(t.contains(&3), true);
+    t.remove(&3);
+    assert_eq!(t.contains(&3), false);
+    assert_eq!(t.contains(&2), true);
+    assert_eq!(t.contains(&12), true);
+    assert_eq!(t.contains(&4), false);
+    assert_eq!(t.contains(&-3), false);
+    assert_eq!(t.is_empty(), false);
 }
 
 // "cases" refer to this document here:
 // https://www.usna.edu/Users/cs/crabbe/SI321/current/red-black/red-black.html
 #[test]
-fn test_case1_left() {
+fn test_insertion_case1_left() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -44,7 +78,7 @@ fn test_case1_left() {
 }
 
 #[test]
-fn test_case1_right() {
+fn test_insertion_case1_right() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -63,7 +97,7 @@ fn test_case1_right() {
 }
 
 #[test]
-fn test_case2_right() {
+fn test_insertion_case2_right() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -82,7 +116,7 @@ fn test_case2_right() {
 }
 
 #[test]
-fn test_case2_left() {
+fn test_insertion_case2_left() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -101,7 +135,7 @@ fn test_case2_left() {
 }
 
 #[test]
-fn test_case3_at_root() {
+fn test_insertion_case3_at_root() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -119,7 +153,7 @@ fn test_case3_at_root() {
 }
 
 #[test]
-fn test_case3_not_root() {
+fn test_insertion_case3_not_root() {
     let mut t = RBTree::new();
     t.insert(2.0);
     t.insert(3.0);
@@ -247,7 +281,7 @@ fn test_complex_insertion() {
 #[test]
 fn test_removal_empty() {
     let mut t = RBTree::new();
-    assert!(t.remove(&3.0).is_none());
+    assert!(t.take(&3.0).is_none());
     assert_eq!(t.contained, 0);
 }
 
@@ -258,11 +292,11 @@ fn test_removal_notfound() {
     t.insert(1.0);
     t.insert(3.0);
     t.insert(1.5);
-    assert!(t.remove(&0.0).is_none());
-    assert!(t.remove(&1.2).is_none());
-    assert!(t.remove(&1.8).is_none());
-    assert!(t.remove(&2.1).is_none());
-    assert!(t.remove(&3.9).is_none());
+    assert!(t.take(&0.0).is_none());
+    assert!(t.take(&1.2).is_none());
+    assert!(t.take(&1.8).is_none());
+    assert!(t.take(&2.1).is_none());
+    assert!(t.take(&3.9).is_none());
     assert_eq!(t.contained, 4);
     assert_eq!(
         format!("{}", t),
@@ -275,7 +309,7 @@ fn test_remove_only_value() {
     let mut t = RBTree::new();
     t.insert(1);
     assert_eq!(t.len(), 1);
-    assert_eq!(t.remove(&1).unwrap(), 1);
+    assert_eq!(t.take(&1).unwrap(), 1);
     assert_eq!(t.len(), 0);
 }
 
@@ -285,12 +319,12 @@ fn test_remove_root() {
     t.insert(2.0);
     t.insert(1.0);
     t.insert(3.0);
-    assert_eq!(t.remove(&2.0).unwrap(), 2.0);
+    assert_eq!(t.take(&2.0).unwrap(), 2.0);
     assert_eq!(
         format!("{:?}", t),
         "B:3.0\n3.0->R:1.0 3.0->___\n1.0->___ 1.0->___"
     );
-    assert_eq!(t.remove(&3.0).unwrap(), 3.0);
+    assert_eq!(t.take(&3.0).unwrap(), 3.0);
     assert_eq!(
         format!("{:?}", t),
         "B:1.0\n1.0->___ 1.0->___"
@@ -302,7 +336,7 @@ fn test_remove_root() {
     t.insert(3.0);
     t.insert(1.5);
     t.insert(4.0);
-    assert_eq!(t.remove(&2.0).unwrap(), 2.0);
+    assert_eq!(t.take(&2.0).unwrap(), 2.0);
     assert_eq!(
         format!("{:?}", t),
         "B:3.0\n\
@@ -311,7 +345,7 @@ fn test_remove_root() {
         1.5->___ 1.5->___"
     );
     t.insert(3.5);
-    assert_eq!(t.remove(&3.0).unwrap(), 3.0);
+    assert_eq!(t.take(&3.0).unwrap(), 3.0);
     assert_eq!(
         format!("{:?}", t),
         "B:3.5\n\
@@ -333,7 +367,7 @@ fn test_removal_no_double_black() {
     t.insert(2.5);
     println!("{:?}", t);
     
-    assert_eq!(t.remove(&1.0).unwrap(), 1.0);
+    assert_eq!(t.take(&1.0).unwrap(), 1.0);
     println!("{:?}", t);
     assert_eq!(
         format!("{:?}", t),
@@ -351,7 +385,7 @@ fn test_removal_simple_case() {
     t.insert(20);
     t.insert(40);
     t.insert(10);
-    assert_eq!(t.remove(&10).unwrap(), 10);
+    assert_eq!(t.take(&10).unwrap(), 10);
     assert_eq!(
         format!("{:?}", t),
         "B:30\n\
@@ -373,7 +407,7 @@ fn test_black_leaf_removal() {
     t.insert(90);
     t.insert(92);
     t.remove(&92); // adding & removing causes colour change
-    assert_eq!(t.remove(&90).unwrap(), 90);
+    assert_eq!(t.take(&90).unwrap(), 90);
     assert_eq!(
         format!("{:?}", t),
         "B:65\n\
@@ -401,7 +435,7 @@ fn test_remove_accumulative_changes() {
     t.remove(&92); // adding & removing causes colour change
     t.remove(&90);
     t.remove(&80);
-    assert_eq!(t.remove(&70).unwrap(), 70);
+    assert_eq!(t.take(&70).unwrap(), 70);
     assert_eq!(
         format!("{:?}", t),
         "B:50\n\
@@ -420,7 +454,7 @@ fn test_removal_case2_inner() {
     t.insert(35);
     t.insert(50);
     println!("{:?}", t);
-    assert_eq!(t.remove(&20).unwrap(), 20);
+    assert_eq!(t.take(&20).unwrap(), 20);
     println!("{:?}", t);
     assert_eq!(
         format!("{:?}", t),
@@ -437,7 +471,7 @@ fn test_removal_case2_inner() {
     t.insert(2);
     t.insert(7);
     t.insert(6);
-    assert_eq!(t.remove(&2).unwrap(), 2);
+    assert_eq!(t.take(&2).unwrap(), 2);
     assert_eq!(
         format!("{:?}", t),
         "B:8\n\
@@ -455,7 +489,7 @@ fn test_removal_case2_outer() {
     t.insert(40);
     t.insert(50);
     println!("{:?}", t);
-    assert_eq!(t.remove(&20).unwrap(), 20);
+    assert_eq!(t.take(&20).unwrap(), 20);
     println!("{:?}", t);
     assert_eq!(
         format!("{:?}", t),
@@ -478,7 +512,7 @@ fn test_removal_case2_outer() {
     t.insert(13);
     t.insert(17);
     t.insert(14);
-    assert_eq!(t.remove(&5).unwrap(), 5);
+    assert_eq!(t.take(&5).unwrap(), 5);
     assert_eq!(
         format!("{:?}", t),
         "B:10\n\
@@ -488,8 +522,8 @@ fn test_removal_case2_outer() {
         4->___ 4->___ 8->___ 8->___ 13->___ 13->R:14 17->___ 17->___\n\
         14->___ 14->___"
     );
-    assert_eq!(t.remove(&6).unwrap(), 6);
-    assert_eq!(t.remove(&7).unwrap(), 7);
+    assert_eq!(t.take(&6).unwrap(), 6);
+    assert_eq!(t.take(&7).unwrap(), 7);
     assert_eq!(
         format!("{:?}", t),
         "B:10\n\
@@ -499,7 +533,7 @@ fn test_removal_case2_outer() {
         13->___ 13->R:14 17->___ 17->___\n\
         14->___ 14->___"
     );
-    assert_eq!(t.remove(&4).unwrap(), 4);
+    assert_eq!(t.take(&4).unwrap(), 4);
     assert_eq!(
         format!("{:?}", t),
         "B:12\n\
@@ -522,7 +556,7 @@ fn test_removal_case3_red_parent() {
     t.insert(7);
     t.remove(&5);
     t.remove(&7);
-    assert_eq!(t.remove(&3).unwrap(), 3);
+    assert_eq!(t.take(&3).unwrap(), 3);
     assert_eq!(
         format!("{:?}", t),
         "B:2\n\
@@ -541,7 +575,7 @@ fn test_removeal_case4() {
     t.insert(3);
     t.insert(5);
     t.insert(6);
-    assert_eq!(t.remove(&1).unwrap(), 1);
+    assert_eq!(t.take(&1).unwrap(), 1);
     assert_eq!(
         format!("{:?}", t),
         "B:4\n\
@@ -681,4 +715,111 @@ fn test_peek_back() {
     assert_eq!(*t.peek_back().unwrap(), 1);
     t.remove(&1);
     assert_eq!(t.peek(), None);
+}
+
+#[test]
+fn test_difference() {
+    let mut t1 = RBTree::new();
+    let mut t2 = RBTree::new();
+    let v1 = vec!(1, 2, 3, 4);
+    let v2 = vec!(2, 3, 4, 5);
+    v1.into_iter().for_each(|v| {t1.insert(v);});
+    v2.into_iter().for_each(|v| {t2.insert(v);});
+    assert_eq!(t1.difference(&t2).collect::<Vec<&usize>>(), vec!(&1));
+    assert_eq!(t2.difference(&t1).collect::<Vec<&usize>>(), vec!(&5));
+
+    let mut t1 = RBTree::new();
+    let mut t2 = RBTree::new();
+    let v1 = vec!(1, 2, 3);
+    let v2 = vec!(0, 2, 3, 4);
+    v1.into_iter().for_each(|v| {t1.insert(v);});
+    v2.into_iter().for_each(|v| {t2.insert(v);});
+    assert_eq!(t1.difference(&t2).collect::<Vec<&usize>>(), vec!(&1));
+    assert_eq!(t2.difference(&t1).collect::<Vec<&usize>>(), vec!(&0, &4));
+
+    let t1 = RBTree::<usize>::new();
+    let t2 = RBTree::new();
+    assert_eq!(t1.difference(&t2).collect::<Vec<&usize>>(), Vec::<&usize>::new());
+
+    let mut t1 = RBTree::new();
+    let mut t2 = RBTree::new();
+    let v1 = vec!(1, 2, 3);
+    let v2 = vec!(1, 2, 3);
+    v1.into_iter().for_each(|v| {t1.insert(v);});
+    v2.into_iter().for_each(|v| {t2.insert(v);});
+
+    assert_eq!(t1.difference(&t2).collect::<Vec<&usize>>(), Vec::<&usize>::new());
+    assert_eq!(
+        t1.difference(&t2).collect::<Vec<&usize>>(), 
+        t2.difference(&t1).collect::<Vec<&usize>>()
+    );
+}
+
+#[test]
+fn test_symmetric_difference() {
+    let mut t1 = RBTree::new();
+    let mut t2 = RBTree::new();
+    let v1 = vec!(1, 2, 3, 4);
+    let v2 = vec!(2, 3, 4, 5);
+    v1.into_iter().for_each(|v| {t1.insert(v);});
+    v2.into_iter().for_each(|v| {t2.insert(v);});
+    assert_eq!(
+        t1.symmetric_difference(&t2).collect::<Vec<&usize>>(),
+        vec!(&1, &5)
+    );
+    assert_eq!(
+        t2.symmetric_difference(&t1).collect::<Vec<&usize>>(),
+        vec!(&1, &5)
+    );
+}
+
+#[test]
+fn test_intersection() {
+    let mut t1 = RBTree::new();
+    let mut t2 = RBTree::new();
+    let v1 = vec!(1, 2, 3, 4);
+    let v2 = vec!(2, 3, 4, 5);
+    v1.into_iter().for_each(|v| {t1.insert(v);});
+    v2.into_iter().for_each(|v| {t2.insert(v);});
+    assert_eq!(
+        t1.intersection(&t2).collect::<Vec<&usize>>(),
+        vec!(&2, &3, &4)
+    );
+    assert_eq!(
+        t2.intersection(&t1).collect::<Vec<&usize>>(),
+        vec!(&2, &3, &4)
+    );
+
+    let mut t1 = RBTree::new();
+    let mut t2 = RBTree::new();
+    let v1 = vec!(1, 2, 3, 4);
+    let v2 = vec!(5, 6, 7, 8);
+    v1.into_iter().for_each(|v| {t1.insert(v);});
+    v2.into_iter().for_each(|v| {t2.insert(v);});
+    assert_eq!(
+        t1.intersection(&t2).collect::<Vec<&usize>>(),
+        Vec::<&usize>::new()
+    );
+    assert_eq!(
+        t2.intersection(&t1).collect::<Vec<&usize>>(),
+        Vec::<&usize>::new()
+    );
+}
+
+#[test]
+fn test_union() {
+    let mut t1 = RBTree::new();
+    let mut t2 = RBTree::new();
+    let v1 = vec!(1, 2, 3, 4);
+    let v2 = vec!(2, 3, 4, 5);
+    v1.into_iter().for_each(|v| {t1.insert(v);});
+    v2.into_iter().for_each(|v| {t2.insert(v);});
+    assert_eq!(
+        t1.union(&t2).collect::<Vec<&usize>>(),
+        vec!(&1, &2, &3, &4, &5)
+    );
+    assert_eq!(
+        t2.union(&t1).collect::<Vec<&usize>>(),
+        vec!(&1, &2, &3, &4, &5)
+    );
 }
