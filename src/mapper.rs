@@ -15,6 +15,14 @@ impl<K: PartialOrd, V> Mapper<K, V> {
         &self.key
     }
 
+    pub fn is_none(&self) -> bool {
+        self.val.is_none()
+    }
+
+    pub fn is_some(&self) -> bool {
+        self.val.is_some()
+    }
+
     pub fn as_ref(&self) -> &V {
         self.val.as_ref().unwrap()
     }

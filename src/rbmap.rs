@@ -19,6 +19,10 @@ impl<K: PartialOrd, V> RBMap<K, V> {
             map: RBTree::new()
         }
     }
+
+    pub fn ordered(&self) -> Vec<(&K, &V)> {
+        self.map.iter().map(|m| (m.key(), m.as_ref()))
+    }
     
     /// Clears all entries from the RBMap
     /// # Example:
@@ -53,7 +57,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
             &Mapper::new(key, None)
         ) {
             None => false,
-            _ => true
+            Some(v) => v.is_some()
         }
     }
 
@@ -243,6 +247,58 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     }
 }
 
+pub struct Iter<'a, K: PartialOrd, V> {
+    pos: usize,
+    ordered: Vec<(&'a K, &'a V)>
+}
+
+impl<'a, K: PartialOrd, V> Iterator for Iter<'a, K, V> {
+    type Item = &'a (K, V);
+
+    fn next(&mut self) -> Option<(&'a K, &'a V)> {
+        match self.ordered.get(self.pos) {
+            Some(v) => {
+                self.pos += 1;
+                Some(*v)
+            },
+            None => None
+        }
+    }
+}
+
+impl<'a, K: PartialOrd, V> ExactSizeIterator for Iter<'a, K, V> {
+    fn len(&self) -> usize {
+        self.ordered.len() - self.pos
+    }
+}
+
+pub struct IterMut<'a, K: PartialOrd, V> {
+    pos: usize,
+    ordered: Vec<&'a (K, mut V)>
+}
+
+impl<'a, K: PartialOrd, V> Iterator for IterMut<'a, K, V> {
+    type Item = &'a (K, mut V);
+
+    fn next(&mut self) -> Option<&'a (K, mut V)> {
+        match self.ordered.get_mut(self.pos) {
+            Some(v) => {
+                self.pos += 1;
+                Some(v)
+            },
+            None => None
+        }
+    }
+}
+
+impl<'a, K: PartialOrd, V> ExactSizeIterator for IterMut<'a, K, V> {
+    fn len(&self) -> usize {
+        self.ordered.len() - self.pos
+    }
+}
+
+impl<'a, K: PartialOrd, V> FusedIterator for Iter<'a, K, V> {}
+
 pub struct Drain<K: PartialOrd, V> {
     tree: RBTree<Mapper<K, V>>
 }
@@ -266,7 +322,3 @@ impl<K: PartialOrd, V> ExactSizeIterator for Drain<K, V> {
 }
 
 impl<K: PartialOrd, V> FusedIterator for Drain<K, V> {}
-
-// pub enum Entry<'a, K: 'a, V: 'a> {
-//     Occupied()
-// }
