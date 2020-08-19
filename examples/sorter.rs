@@ -2,11 +2,8 @@ use rb_tree::RBTree;
 
 // uses an rbtree to sort data
 fn sort<T: PartialOrd>(to_order: Vec<T>) -> Vec<T> {
-    let mut tree = RBTree::new();
+    let mut tree: RBTree<T> = to_order.into_iter().collect();
     let mut ordered = Vec::new();
-    for v in to_order {
-        tree.insert(v);
-    }
     while let Some(v) = tree.pop() {
         ordered.push(v);
     }
