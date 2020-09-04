@@ -49,3 +49,14 @@ pub fn ordered_insertion<'a, T: PartialOrd>(cur: &'a Node<T>, order: &mut Vec<&'
     }
     ordered_insertion(cur.get_right(), order);
 }
+
+// pub (crate) fn ordered_insertion_mut<'a, T: PartialOrd>(cur: &'a mut Node<T>, order: &mut Vec<&'a mut T>) {
+//     if cur.is_leaf() {
+//         return;
+//     }
+//     ordered_insertion_mut(cur.get_left_mut(), order);
+//     if let Some(v) = cur.value_mut() {
+//         order.push(v);
+//     }
+//     ordered_insertion_mut(cur.get_right_mut(), order);
+// }

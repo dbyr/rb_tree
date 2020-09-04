@@ -145,7 +145,7 @@ impl<T: PartialOrd> Node<T> {
     }
 
     // method used for testing
-    #[allow(dead_code)]
+    #[cfg(test)]
     pub fn new_black(val: T) -> Node<T> {
         Internal(
             Innards{
@@ -197,7 +197,7 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
-    fn value_mut(&mut self) -> Option<&mut T> {
+    pub fn value_mut(&mut self) -> Option<&mut T> {
         match self {
             Internal(n) => Some(&mut n.value),
             Leaf(_) => None
@@ -242,8 +242,6 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
-    // methods used for testing
-    #[allow(dead_code)]
     pub fn get_left_mut(&mut self) -> &mut Node<T> {
         match self {
             Internal(n) => &mut n.l_child,
@@ -251,7 +249,6 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
-    #[allow(dead_code)]
     pub fn get_right_mut(&mut self) -> &mut Node<T> {
         match self {
             Internal(n) => &mut n.r_child,

@@ -103,6 +103,12 @@ impl<T: PartialOrd> RBTree<T> {
         order
     }
 
+    // fn ordered_mut(&mut self) -> Vec<&mut T> {
+    //     let mut order = Vec::new();
+    //     ordered_insertion_mut(&mut self.root, &mut order);
+    //     order
+    // }
+
     /// Returns the number of elements contained
     /// in the tree.
     /// # Example:
@@ -365,6 +371,13 @@ impl<T: PartialOrd> RBTree<T> {
             ordered: self.ordered()
         }
     }
+
+    // pub (crate) fn iter_mut(&mut self) -> IterMut<T> {
+    //     IterMut {
+    //         pos: 0,
+    //         ordered: self.ordered_mut()
+    //     }
+    // }
 
     /// Returns an iterator representing the
     /// difference between the items in this RBTree
@@ -656,6 +669,36 @@ impl<'a, T: PartialOrd> ExactSizeIterator for Iter<'a, T> {
 }
 
 impl<'a, T: PartialOrd> FusedIterator for Iter<'a, T> {}
+
+// only for use with rbmap
+#[allow(dead_code)]
+pub (crate) struct IterMut<'a, T: PartialOrd> {
+    pos: usize,
+    ordered: Vec<&'a mut T>
+}
+
+impl<'a, 'b: 'a, T: PartialOrd> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<&'a mut T> {
+        if self.pos >= self.ordered.len() {
+            None
+        } else {
+            let ret = self.ordered.pop();
+            self.pos += 1;
+            ret
+            // Some(self.ordered[self.pos - 1])
+        }
+    }
+}
+
+impl<'a, T: PartialOrd> ExactSizeIterator for IterMut<'a, T> {
+    fn len(&self) -> usize {
+        self.ordered.len() - self.pos
+    }
+}
+
+impl<'a, T: PartialOrd> FusedIterator for IterMut<'a, T> {}
 
 pub struct Difference<'a, T: PartialOrd> {
     nextl: Option<&'a T>,

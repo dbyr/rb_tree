@@ -21,8 +21,12 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     }
 
     pub fn ordered(&self) -> Vec<(&K, &V)> {
-        self.map.iter().map(|m| (m.key(), m.as_ref()))
+        self.map.iter().map(|m| (m.key(), m.as_ref())).collect()
     }
+
+    // pub fn ordered_mut(&mut self) -> Vec<(&K, &mut V)> {
+    //     self.map.iter_mut().map(|m| (m.key(), m.as_mut())).collect()
+    // }
     
     /// Clears all entries from the RBMap
     /// # Example:
@@ -245,6 +249,20 @@ impl<K: PartialOrd, V> RBMap<K, V> {
             None => None
         }
     }
+
+    pub fn iter(&self) -> Iter<K, V> {
+        Iter {
+            pos: 0,
+            ordered: self.ordered()
+        }
+    }
+
+    // pub fn iter_mut(&mut self) -> IterMut<K, V> {
+    //     IterMut {
+    //         pos: 0,
+    //         ordered: self.ordered_mut()
+    //     }
+    // }
 }
 
 pub struct Iter<'a, K: PartialOrd, V> {
@@ -253,7 +271,7 @@ pub struct Iter<'a, K: PartialOrd, V> {
 }
 
 impl<'a, K: PartialOrd, V> Iterator for Iter<'a, K, V> {
-    type Item = &'a (K, V);
+    type Item = (&'a K, &'a V);
 
     fn next(&mut self) -> Option<(&'a K, &'a V)> {
         match self.ordered.get(self.pos) {
@@ -272,32 +290,34 @@ impl<'a, K: PartialOrd, V> ExactSizeIterator for Iter<'a, K, V> {
     }
 }
 
-pub struct IterMut<'a, K: PartialOrd, V> {
-    pos: usize,
-    ordered: Vec<&'a (K, mut V)>
-}
-
-impl<'a, K: PartialOrd, V> Iterator for IterMut<'a, K, V> {
-    type Item = &'a (K, mut V);
-
-    fn next(&mut self) -> Option<&'a (K, mut V)> {
-        match self.ordered.get_mut(self.pos) {
-            Some(v) => {
-                self.pos += 1;
-                Some(v)
-            },
-            None => None
-        }
-    }
-}
-
-impl<'a, K: PartialOrd, V> ExactSizeIterator for IterMut<'a, K, V> {
-    fn len(&self) -> usize {
-        self.ordered.len() - self.pos
-    }
-}
-
 impl<'a, K: PartialOrd, V> FusedIterator for Iter<'a, K, V> {}
+
+// pub struct IterMut<'a, K: PartialOrd, V> {
+//     pos: usize,
+//     ordered: Vec<(&'a K, &'a mut V)>
+// }
+
+// impl<'a, K: PartialOrd, V> Iterator for IterMut<'a, K, V> {
+//     type Item = (&'a K, &'a mut V);
+
+//     fn next(&mut self) -> Option<(&'a K, &'a mut V)> {
+//         match self.ordered.get(self.pos) {
+//             Some(v) => {
+//                 self.pos += 1;
+//                 Some(*v)
+//             },
+//             None => None
+//         }
+//     }
+// }
+
+// impl<'a, K: PartialOrd, V> ExactSizeIterator for IterMut<'a, K, V> {
+//     fn len(&self) -> usize {
+//         self.ordered.len() - self.pos
+//     }
+// }
+
+// impl<'a, K: PartialOrd, V> FusedIterator for IterMut<'a, K, V> {}
 
 pub struct Drain<K: PartialOrd, V> {
     tree: RBTree<Mapper<K, V>>
