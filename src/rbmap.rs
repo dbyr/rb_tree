@@ -250,6 +250,33 @@ impl<K: PartialOrd, V> RBMap<K, V> {
         }
     }
 
+    /// Removes all key-value pairs that do not return true for the
+    /// provided method.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert(1, 1);
+    /// map.insert(2, 4);
+    /// map.insert(3, 9);
+    /// map.retain(|_, v| v % 2 == 0);
+    /// 
+    /// let mut pairs = map.drain();
+    /// assert_eq!(pairs.next().unwrap(), (2, 4));
+    /// assert_eq!(pairs.next(), None);
+    /// ```
+    pub fn retain<F: FnMut(&K, &mut V) -> bool>(&mut self, mut logic: F) {
+        let mut rep = RBMap::new();
+        for (key, mut val) in self.drain() {
+            if logic(&key, &mut val) {
+                rep.insert(key, val);
+            }
+        }
+        std::mem::swap(self, &mut rep);
+    }
+
+    
     pub fn iter(&self) -> Iter<K, V> {
         Iter {
             pos: 0,
@@ -291,6 +318,60 @@ impl<'a, K: PartialOrd, V> ExactSizeIterator for Iter<'a, K, V> {
 }
 
 impl<'a, K: PartialOrd, V> FusedIterator for Iter<'a, K, V> {}
+
+pub struct Keys<'a, K: PartialOrd, V> {
+    pos: usize,
+    ordered: Vec<(&'a K, &'a V)>
+}
+
+impl<'a, K: PartialOrd, V> Iterator for Keys<'a, K, V> {
+    type Item = &'a K;
+
+    fn next(&mut self) -> Option<&'a K> {
+        match self.ordered.get(self.pos) {
+            Some(v) => {
+                self.pos += 1;
+                Some(v.0)
+            },
+            None => None
+        }
+    }
+}
+
+impl<'a, K: PartialOrd, V> ExactSizeIterator for Keys<'a, K, V> {
+    fn len(&self) -> usize {
+        self.ordered.len() - self.pos
+    }
+}
+
+impl<'a, K: PartialOrd, V> FusedIterator for Keys<'a, K, V> {}
+
+pub struct Values<'a, K: PartialOrd, V> {
+    pos: usize,
+    ordered: Vec<(&'a K, &'a V)>
+}
+
+impl<'a, K: PartialOrd, V> Iterator for Values<'a, K, V> {
+    type Item = &'a V;
+
+    fn next(&mut self) -> Option<&'a V> {
+        match self.ordered.get(self.pos) {
+            Some(v) => {
+                self.pos += 1;
+                Some(v.1)
+            },
+            None => None
+        }
+    }
+}
+
+impl<'a, K: PartialOrd, V> ExactSizeIterator for Values<'a, K, V> {
+    fn len(&self) -> usize {
+        self.ordered.len() - self.pos
+    }
+}
+
+impl<'a, K: PartialOrd, V> FusedIterator for Values<'a, K, V> {}
 
 // pub struct IterMut<'a, K: PartialOrd, V> {
 //     pos: usize,
