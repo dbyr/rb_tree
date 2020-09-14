@@ -112,13 +112,36 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// let mut map = RBMap::new();
     /// assert!(map.get(&"Hello").is_none());
     /// map.insert("Hello", "world");
-    /// assert_eq!(map.get_key_value(&"Hello").unwrap(), (&"Hello", &"world"));
+    /// assert_eq!(map.get_pair(&"Hello").unwrap(), (&"Hello", &"world"));
     /// ```
-    pub fn get_key_value(&self, key: &K) -> Option<(&K, &V)> {
+    pub fn get_pair(&self, key: &K) -> Option<(&K, &V)> {
         match self.map.get(
             &Mapper::new(key, None)
         ) {
             Some(v) => Some((v.key(), v.as_ref())),
+            None => None
+        }
+    }
+
+    /// Returns an option containing a reference
+    /// to the key-value pair associated with this
+    /// key of which the value is mutable.
+    /// Returns none if this key does not have an
+    /// associated value.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    /// 
+    /// let mut map = RBMap::new();
+    /// assert!(map.get(&"Hello").is_none());
+    /// map.insert("Hello", "world");
+    /// assert_eq!(map.get_pair(&"Hello").unwrap(), (&"Hello", &"world"));
+    /// ```
+    pub fn get_pair_mut(&mut self, key: &K) -> Option<(&K, &mut V)> {
+        match self.map.get_mut(
+            &Mapper::new(key, None)
+        ) {
+            Some(v) => Some(v.mut_pair()),
             None => None
         }
     }
@@ -269,7 +292,23 @@ impl<K: PartialOrd, V> RBMap<K, V> {
         std::mem::swap(self, &mut rep);
     }
 
-    
+    /// An iterator that visits all key-value
+    /// pairs in their key's partialord order.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert(1, 1);
+    /// map.insert(2, 4);
+    /// map.insert(3, 9);
+    /// 
+    /// let mut pairs = map.iter();
+    /// assert_eq!(pairs.next().unwrap(), (1, 1));
+    /// assert_eq!(pairs.next().unwrap(), (2, 4));
+    /// assert_eq!(pairs.next().unwrap(), (3, 9));
+    /// assert_eq!(pairs.next(), None);
+    /// ```
     pub fn iter(&self) -> Iter<K, V> {
         Iter {
             pos: 0,
@@ -277,9 +316,103 @@ impl<K: PartialOrd, V> RBMap<K, V> {
         }
     }
 
+    /// An iterator that visits all key-value
+    /// pairs in their key's partialord order
+    /// and presents the value only as mutable.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert(1, 1);
+    /// map.insert(2, 4);
+    /// map.insert(3, 9);
+    /// 
+    /// map.iter_mut().for_each(|(_, v)| *v *= 2);
+    /// 
+    /// let mut pairs = map.iter();
+    /// assert_eq!(pairs.next().unwrap(), (1, 2));
+    /// assert_eq!(pairs.next().unwrap(), (2, 8));
+    /// assert_eq!(pairs.next().unwrap(), (3, 18));
+    /// assert_eq!(pairs.next(), None);
+    /// ```
     pub fn iter_mut(&mut self) -> IterMut<K, V> {
         IterMut {
             iter: self.map.iter()
+        }
+    }
+
+    /// An iterator that visits all values
+    /// in their key's partialord order.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert(1, 1);
+    /// map.insert(2, 4);
+    /// map.insert(3, 9);
+    /// 
+    /// let mut vals = map.values();
+    /// assert_eq!(vals.next().unwrap(), 1);
+    /// assert_eq!(vals.next().unwrap(), 4);
+    /// assert_eq!(vals.next().unwrap(), 9);
+    /// assert_eq!(vals.next(), None);
+    /// ```
+    pub fn values(&self) -> Values<K, V> {
+        Values {
+            pos: 0,
+            ordered: self.ordered()
+        }
+    }
+
+    /// An iterator that visits all values
+    /// in their key's partialord order
+    /// and presents them as mutable.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert(1, 1);
+    /// map.insert(2, 4);
+    /// map.insert(3, 9);
+    /// 
+    /// map.values_mut().for_each(|v| *v *= 2);
+    /// 
+    /// let mut pairs = map.iter();
+    /// assert_eq!(pairs.next().unwrap(), (1, 2));
+    /// assert_eq!(pairs.next().unwrap(), (2, 8));
+    /// assert_eq!(pairs.next().unwrap(), (3, 18));
+    /// assert_eq!(pairs.next(), None);
+    /// ```
+    pub fn values_mut(&mut self) -> ValuesMut<K, V> {
+        ValuesMut {
+            iter: self.iter_mut()
+        }
+    }
+
+    /// An iterator that visits all keys
+    /// in their partialord order.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert(1, 1);
+    /// map.insert(2, 4);
+    /// map.insert(3, 9);
+    /// 
+    /// let mut keys = map.keys();
+    /// assert_eq!(keys.next().unwrap(), 1);
+    /// assert_eq!(keys.next().unwrap(), 2);
+    /// assert_eq!(keys.next().unwrap(), 3);
+    /// assert_eq!(keys.next(), None);
+    /// ```
+    pub fn keys(&self) -> Keys<K, V> {
+        Keys {
+            pos: 0,
+            ordered: self.ordered()
         }
     }
 
@@ -372,6 +505,29 @@ impl<'a, K: PartialOrd, V> ExactSizeIterator for Values<'a, K, V> {
 
 impl<'a, K: PartialOrd, V> FusedIterator for Values<'a, K, V> {}
 
+pub struct ValuesMut<'a, K: PartialOrd, V> {
+    iter: IterMut<'a, K, V>
+}
+
+impl<'a, K: PartialOrd, V> Iterator for ValuesMut<'a, K, V> {
+    type Item = &'a mut V;
+
+    fn next(&mut self) -> Option<&'a mut V> {
+        match self.iter.next() {
+            Some(v) => Some(v.1),
+            None => None
+        }
+    }
+}
+
+impl<'a, K: PartialOrd, V> ExactSizeIterator for ValuesMut<'a, K, V> {
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
+}
+
+impl<'a, K: PartialOrd, V> FusedIterator for ValuesMut<'a, K, V> {}
+
 pub struct IterMut<'a, K: PartialOrd, V> {
     iter: rbtree::Iter<'a, Mapper<K, V>>
 }
@@ -425,3 +581,58 @@ impl<K: PartialOrd, V> ExactSizeIterator for Drain<K, V> {
 }
 
 impl<K: PartialOrd, V> FusedIterator for Drain<K, V> {}
+
+pub struct Entry<'a, K: PartialOrd, V> {
+    map: &'a mut RBMap<K, V>,
+    key: K
+}
+
+/// Follows a similar implementation to std::collections::HashMap,
+/// in terms of behaviour, only differs in types used.
+/// For further detail about any given method, please refer
+/// to the documentation of HashMap::Entry.
+/// For the time being only copyable keys can utilise
+/// these methods
+impl<'a, K: PartialOrd + Copy, V> Entry<'a, K, V> {
+    pub fn insert(self, val: V) -> (&'a K, &'a mut V) {
+        match self.map.remove_entry(&self.key) {
+            Some((k, _)) => {self.map.insert(k, val);},
+            None => {self.map.insert(self.key, val);}
+        }
+        self.map.get_pair_mut(&self.key).unwrap()
+    }
+    
+    pub fn and_modify<F>(self, f: F) -> Entry<'a, K, V>
+    where F: FnOnce(&mut V) {
+        if let Some(v) = self.map.get_mut(&self.key).as_mut() {
+            f(*v);
+        }
+        self
+    }
+
+    pub fn or_insert(self, default: V) -> &'a mut V {
+        if !self.map.contains_key(&self.key) {
+            self.map.insert(self.key, default);
+        }
+        self.map.get_mut(&self.key).unwrap()
+    }
+
+    pub fn or_insert_with<F>(self, default: F) -> &'a mut V
+    where F: FnOnce() -> V {
+        if !self.map.contains_key(&self.key) {
+            self.map.insert(self.key, default());
+        }
+        self.map.get_mut(&self.key).unwrap()
+    }
+}
+
+
+impl<'a, K: PartialOrd + Copy, V: Default> Entry<'a, K, V> {
+    pub fn or_default<F>(self) -> &'a mut V
+    where F: FnOnce() -> V {
+        if !self.map.contains_key(&self.key) {
+            self.map.insert(self.key, V::default());
+        }
+        self.map.get_mut(&self.key).unwrap()
+    }
+}
