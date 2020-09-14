@@ -35,6 +35,14 @@ impl<K: PartialOrd, V> Mapper<K, V> {
     pub fn consume(self) -> (K, V) {
         (self.key, self.val.unwrap())
     }
+
+    pub fn pair(&self) -> (&K, &V) {
+        (&self.key, self.val.as_ref().unwrap())
+    }
+
+    pub fn mut_pair(&mut self) -> (&K, &mut V) {
+        (&self.key, self.val.as_mut().unwrap())
+    }
 }
 
 impl<K: PartialOrd, V> PartialEq for Mapper<K, V> {

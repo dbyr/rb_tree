@@ -1,5 +1,6 @@
 use crate::{RBMap, RBTree};
 
+use crate::rbtree;
 use crate::mapper::Mapper;
 use std::iter::{ExactSizeIterator, FusedIterator};
 
@@ -19,14 +20,6 @@ impl<K: PartialOrd, V> RBMap<K, V> {
             map: RBTree::new()
         }
     }
-
-    pub fn ordered(&self) -> Vec<(&K, &V)> {
-        self.map.iter().map(|m| (m.key(), m.as_ref())).collect()
-    }
-
-    // pub fn ordered_mut(&mut self) -> Vec<(&K, &mut V)> {
-    //     self.map.iter_mut().map(|m| (m.key(), m.as_mut())).collect()
-    // }
     
     /// Clears all entries from the RBMap
     /// # Example:
@@ -284,14 +277,20 @@ impl<K: PartialOrd, V> RBMap<K, V> {
         }
     }
 
-    // pub fn iter_mut(&mut self) -> IterMut<K, V> {
-    //     IterMut {
-    //         pos: 0,
-    //         ordered: self.ordered_mut()
-    //     }
-    // }
+    pub fn iter_mut(&mut self) -> IterMut<K, V> {
+        IterMut {
+            iter: self.map.iter()
+        }
+    }
+
+    // internal helper methods
+    fn ordered(&self) -> Vec<(&K, &V)> {
+        self.map.iter().map(|m| (m.key(), m.as_ref())).collect()
+    }
 }
 
+// this should be fine to do since only one
+// borrow can occur when mutable
 pub struct Iter<'a, K: PartialOrd, V> {
     pos: usize,
     ordered: Vec<(&'a K, &'a V)>
@@ -373,32 +372,35 @@ impl<'a, K: PartialOrd, V> ExactSizeIterator for Values<'a, K, V> {
 
 impl<'a, K: PartialOrd, V> FusedIterator for Values<'a, K, V> {}
 
-// pub struct IterMut<'a, K: PartialOrd, V> {
-//     pos: usize,
-//     ordered: Vec<(&'a K, &'a mut V)>
-// }
+pub struct IterMut<'a, K: PartialOrd, V> {
+    iter: rbtree::Iter<'a, Mapper<K, V>>
+}
 
-// impl<'a, K: PartialOrd, V> Iterator for IterMut<'a, K, V> {
-//     type Item = (&'a K, &'a mut V);
+impl<'a, K: PartialOrd, V> Iterator for IterMut<'a, K, V> {
+    type Item = (&'a K, &'a mut V);
 
-//     fn next(&mut self) -> Option<(&'a K, &'a mut V)> {
-//         match self.ordered.get(self.pos) {
-//             Some(v) => {
-//                 self.pos += 1;
-//                 Some(*v)
-//             },
-//             None => None
-//         }
-//     }
-// }
+    fn next(&mut self) -> Option<(&'a K, &'a mut V)> {
+        let next = self.iter.next();
+        match next {
+            Some(iv) => {
+                let v = unsafe {
+                    let ptr = iv as *const Mapper<K, V>;
+                    &mut *(ptr as *mut Mapper<K, V>)
+                };
+                Some(v.mut_pair())
+            },
+            None => None
+        }
+    }
+}
 
-// impl<'a, K: PartialOrd, V> ExactSizeIterator for IterMut<'a, K, V> {
-//     fn len(&self) -> usize {
-//         self.ordered.len() - self.pos
-//     }
-// }
+impl<'a, K: PartialOrd, V> ExactSizeIterator for IterMut<'a, K, V> {
+    fn len(&self) -> usize {
+        self.iter.len()
+    }
+}
 
-// impl<'a, K: PartialOrd, V> FusedIterator for IterMut<'a, K, V> {}
+impl<'a, K: PartialOrd, V> FusedIterator for IterMut<'a, K, V> {}
 
 pub struct Drain<K: PartialOrd, V> {
     tree: RBTree<Mapper<K, V>>
