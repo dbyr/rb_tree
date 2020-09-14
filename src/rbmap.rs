@@ -276,7 +276,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// map.insert(1, 1);
     /// map.insert(2, 4);
     /// map.insert(3, 9);
-    /// map.retain(|_, v| v % 2 == 0);
+    /// map.retain(|_, v| *v % 2 == 0);
     /// 
     /// let mut pairs = map.drain();
     /// assert_eq!(pairs.next().unwrap(), (2, 4));
@@ -304,9 +304,9 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// map.insert(3, 9);
     /// 
     /// let mut pairs = map.iter();
-    /// assert_eq!(pairs.next().unwrap(), (1, 1));
-    /// assert_eq!(pairs.next().unwrap(), (2, 4));
-    /// assert_eq!(pairs.next().unwrap(), (3, 9));
+    /// assert_eq!(pairs.next().unwrap(), (&1, &1));
+    /// assert_eq!(pairs.next().unwrap(), (&2, &4));
+    /// assert_eq!(pairs.next().unwrap(), (&3, &9));
     /// assert_eq!(pairs.next(), None);
     /// ```
     pub fn iter(&self) -> Iter<K, V> {
@@ -331,9 +331,9 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// map.iter_mut().for_each(|(_, v)| *v *= 2);
     /// 
     /// let mut pairs = map.iter();
-    /// assert_eq!(pairs.next().unwrap(), (1, 2));
-    /// assert_eq!(pairs.next().unwrap(), (2, 8));
-    /// assert_eq!(pairs.next().unwrap(), (3, 18));
+    /// assert_eq!(pairs.next().unwrap(), (&1, &2));
+    /// assert_eq!(pairs.next().unwrap(), (&2, &8));
+    /// assert_eq!(pairs.next().unwrap(), (&3, &18));
     /// assert_eq!(pairs.next(), None);
     /// ```
     pub fn iter_mut(&mut self) -> IterMut<K, V> {
@@ -354,9 +354,9 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// map.insert(3, 9);
     /// 
     /// let mut vals = map.values();
-    /// assert_eq!(vals.next().unwrap(), 1);
-    /// assert_eq!(vals.next().unwrap(), 4);
-    /// assert_eq!(vals.next().unwrap(), 9);
+    /// assert_eq!(*vals.next().unwrap(), 1);
+    /// assert_eq!(*vals.next().unwrap(), 4);
+    /// assert_eq!(*vals.next().unwrap(), 9);
     /// assert_eq!(vals.next(), None);
     /// ```
     pub fn values(&self) -> Values<K, V> {
@@ -380,11 +380,11 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// 
     /// map.values_mut().for_each(|v| *v *= 2);
     /// 
-    /// let mut pairs = map.iter();
-    /// assert_eq!(pairs.next().unwrap(), (1, 2));
-    /// assert_eq!(pairs.next().unwrap(), (2, 8));
-    /// assert_eq!(pairs.next().unwrap(), (3, 18));
-    /// assert_eq!(pairs.next(), None);
+    /// let mut vals = map.values();
+    /// assert_eq!(*vals.next().unwrap(), 2);
+    /// assert_eq!(*vals.next().unwrap(), 8);
+    /// assert_eq!(*vals.next().unwrap(), 18);
+    /// assert_eq!(vals.next(), None);
     /// ```
     pub fn values_mut(&mut self) -> ValuesMut<K, V> {
         ValuesMut {
@@ -404,15 +404,34 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// map.insert(3, 9);
     /// 
     /// let mut keys = map.keys();
-    /// assert_eq!(keys.next().unwrap(), 1);
-    /// assert_eq!(keys.next().unwrap(), 2);
-    /// assert_eq!(keys.next().unwrap(), 3);
+    /// assert_eq!(*keys.next().unwrap(), 1);
+    /// assert_eq!(*keys.next().unwrap(), 2);
+    /// assert_eq!(*keys.next().unwrap(), 3);
     /// assert_eq!(keys.next(), None);
     /// ```
     pub fn keys(&self) -> Keys<K, V> {
         Keys {
             pos: 0,
             ordered: self.ordered()
+        }
+    }
+
+    /// Provides an interface for ensuring values
+    /// are allocated to the given key.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    /// 
+    /// let mut map = RBMap::new();
+    /// 
+    /// let val = map.entry(1).or_insert(2);
+    /// *val = 3;
+    /// assert_eq!(*map.get(&1).unwrap(), 3);
+    /// ```
+    pub fn entry(&mut self, key: K) -> Entry<K, V> {
+        Entry {
+            map: self,
+            key: key
         }
     }
 
