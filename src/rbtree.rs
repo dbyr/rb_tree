@@ -6,6 +6,10 @@ use std::fmt::{Debug, Display, Result, Formatter};
 use crate::helpers::{write_to_level, ordered_insertion};
 use std::iter::{ExactSizeIterator, FusedIterator, FromIterator};
 
+fn partial_ord<T, K: PartialOrd<T>>(l: &K, r: &T) -> std::cmp::Ordering {
+    l.partial_cmp(r).unwrap()
+}
+
 impl<T: PartialOrd + Debug> Debug for RBTree<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let mut levels = Vec::new();
@@ -40,7 +44,10 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(t.take(&2).unwrap(), 2);
     /// ```
     pub fn new() -> RBTree<T> {
-        RBTree {root: Leaf(Black), contained: 0}
+        RBTree {
+            root: Leaf(Black),
+            contained: 0
+        }
     }
 
     /// Clears all entries from the tree.
@@ -152,7 +159,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(t.insert("Hello".to_string()), false);
     /// ```
     pub fn insert(&mut self, val: T) -> bool {
-        match self.root.insert(val) {
+        match self.root.insert(val, &partial_ord) {
             Some(_) => false,
             None => {
                 self.contained += 1;
@@ -174,7 +181,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(t.replace("Hello".to_string()), Some("Hello".to_string()));
     /// ```
     pub fn replace(&mut self, val: T) -> Option<T> {
-        match self.root.insert(val) {
+        match self.root.insert(val, &partial_ord) {
             Some(v) => Some(v),
             None => {
                 self.contained += 1;
@@ -210,11 +217,11 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(t.get(&2), None);
     /// ```
     pub fn get<K: PartialOrd<T>>(&self, val: &K) -> Option<&T> {
-        self.root.get(val)
+        self.root.get(val, &partial_ord)
     }
 
     pub(crate) fn get_mut<K: PartialOrd<T>>(&mut self, val: &K) -> Option<&mut T> {
-        self.root.get_mut(val)
+        self.root.get_mut(val, &partial_ord)
     }
 
     // pub fn at(&self, index: usize) -> Option<&T> {
@@ -235,7 +242,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(t.take(&2), None);
     /// ```
     pub fn take<K: PartialOrd<T>>(&mut self, val: &K) -> Option<T> {
-        match self.root.remove(val) {
+        match self.root.remove(val, &partial_ord) {
             Some(v) => {
                 self.contained -= 1;
                 Some(v)
@@ -258,7 +265,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(t.remove(&2), false);
     /// ```
     pub fn remove<K: PartialOrd<T>>(&mut self, val: &K) -> bool {
-        match self.root.remove(val) {
+        match self.root.remove(val, &partial_ord) {
             Some(_) => {
                 self.contained -= 1;
                 true
@@ -574,8 +581,6 @@ impl<T: PartialOrd> RBTree<T> {
         }
         std::mem::swap(&mut rep, self);
     }
-
-
 }
 
 pub struct IntoIter<T: PartialOrd> {
