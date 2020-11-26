@@ -2,7 +2,7 @@ use crate::{RBMap, RBTree};
 
 use crate::rbtree;
 use crate::mapper::Mapper;
-use std::iter::{ExactSizeIterator, FusedIterator};
+use std::iter::{ExactSizeIterator, FusedIterator, FromIterator};
 
 impl<K: PartialOrd, V> RBMap<K, V> {
 
@@ -438,6 +438,42 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     // internal helper methods
     fn ordered(&self) -> Vec<(&K, &V)> {
         self.map.iter().map(|m| (m.key(), m.as_ref())).collect()
+    }
+}
+
+pub struct IntoIter<K: PartialOrd, V> {
+    tree: RBTree<Mapper<K, V>>
+}
+
+impl<K: PartialOrd, V> Iterator for IntoIter<K, V> {
+    type Item = (K, V);
+
+    fn next(&mut self) -> Option<(K, V)> {
+        match self.tree.pop() {
+            Some(v) => Some(v.consume()),
+            None => None
+        }
+    }
+}
+
+impl<K: PartialOrd, V> IntoIterator for RBMap<K, V> {
+    type Item = (K, V);
+    type IntoIter = IntoIter<K, V>;
+
+    fn into_iter(self) -> IntoIter<K, V> {
+        IntoIter {
+            tree: self.map
+        }
+    }
+}
+
+impl<K: PartialOrd, V> FromIterator<(K, V)> for RBMap<K, V> {
+    fn from_iter<I: IntoIterator<Item=(K, V)>>(iter: I) -> Self {
+        let mut map = RBMap::new();
+        for (key, val) in iter {
+            map.insert(key, val);
+        }
+        map
     }
 }
 
