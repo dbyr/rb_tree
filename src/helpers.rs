@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use crate::node::Node;
 use crate::node::Node::{Internal, Leaf};
 
-pub fn write_to_level<T: PartialOrd + Debug>(
+pub fn write_to_level<T: Debug>(
     cur: &Node<T>, 
     from_str: String,
     level: usize, 
@@ -39,7 +39,7 @@ pub fn write_to_level<T: PartialOrd + Debug>(
     }
 }
 
-pub fn ordered_insertion<'a, T: PartialOrd>(cur: &'a Node<T>, order: &mut Vec<&'a T>) {
+pub fn ordered_insertion<'a, T>(cur: &'a Node<T>, order: &mut Vec<&'a T>) {
     if cur.is_leaf() {
         return;
     }

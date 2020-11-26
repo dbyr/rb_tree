@@ -1,6 +1,7 @@
 use std::boxed::Box;
 use std::ops::DerefMut;
 use std::mem::swap as m_swap;
+use std::cmp::Ordering::{Equal, Greater, Less};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Colour {
@@ -26,7 +27,7 @@ enum Removal<T> {
 }
 
 // makes matches nicer
-pub struct Innards<T: PartialOrd> {
+pub struct Innards<T> {
     value: T,
     colour: Colour,
     r_child: Box<Node<T>>,
@@ -34,7 +35,7 @@ pub struct Innards<T: PartialOrd> {
 }
 
 // represents a node in the rb_tree
-pub enum Node<T: PartialOrd> {
+pub enum Node<T> {
     Internal(Innards<T>),
     Leaf(Colour)
 }
@@ -54,46 +55,7 @@ impl std::fmt::Display for Colour {
     }
 }
 
-// convenience implementations for insertion and moving things around
-impl<T: PartialOrd> PartialEq<T> for Node<T> {
-    fn eq(&self, other: &T) -> bool {
-        match self {
-            Internal(n) => n.value == *other,
-            Leaf(_) => false
-        }
-    }
-}
-
-impl<T: PartialOrd> PartialOrd<T> for Node<T> {
-    fn partial_cmp(&self, other: &T) -> Option<std::cmp::Ordering> {
-        match self {
-            Internal(n) => n.value.partial_cmp(other),
-            Leaf(_) => None
-        }
-    }
-}
-
-impl<T: PartialOrd> PartialEq for Node<T> {
-    fn eq(&self, other: &Node<T>) -> bool {
-        if let (Internal(n1), Internal(n2)) = (self, other) {
-            n1.value == n2.value
-        } else {
-            false
-        }
-    }
-}
-
-impl<T: PartialOrd> PartialOrd for Node<T> {
-    fn partial_cmp(&self, other: &Node<T>) -> Option<std::cmp::Ordering> {
-        if let (Internal(n1), Internal(n2)) = (self, other) {
-            n1.value.partial_cmp(&n2.value)
-        } else {
-            None
-        }
-    }
-}
-
-impl<T: PartialOrd> Innards<T> {
+impl<T> Innards<T> {
     pub fn is_black(&self) -> bool {
         match self.colour {
             Black => true,
@@ -131,7 +93,7 @@ impl<T: PartialOrd> Innards<T> {
     }
 }
 
-impl<T: PartialOrd> Node<T> {
+impl<T> Node<T> {
 
     pub fn new(val: T) -> Node<T> {
         Internal(
@@ -342,16 +304,22 @@ impl<T: PartialOrd> Node<T> {
     }
 
     // returns the value if the value was not inserted
-    fn insert_op(&mut self, mut new_v: T) -> Insertion<T> {
+    fn insert_op<P>(&mut self, mut new_v: T, cmp: &P) -> Insertion<T>
+    where P: Fn(&T, &T) -> std::cmp::Ordering {
         match self {
             Internal(n) => {
-                let (res, right, recolour) = if n.value == new_v {
-                    m_swap(&mut n.value, &mut new_v); // useful if used like a map
-                    (Replaced(new_v), true, true)
-                } else if n.value > new_v {
-                    (n.l_child.insert_op(new_v), false, n.r_child.is_red())
-                } else {
-                    (n.r_child.insert_op(new_v), true, n.l_child.is_red())
+                let order = cmp(&n.value, &new_v);
+                let (res, right, recolour) = match order {
+                    Equal => {
+                        m_swap(&mut n.value, &mut new_v); // useful if used like a map
+                        (Replaced(new_v), true, true)
+                    },
+                    Greater => {
+                        (n.l_child.insert_op(new_v, cmp), false, n.r_child.is_red())
+                    },
+                    Less => {
+                        (n.r_child.insert_op(new_v, cmp), true, n.l_child.is_red())
+                    }
                 };
                 match res {
                     InvalidLeft => {
@@ -392,8 +360,9 @@ impl<T: PartialOrd> Node<T> {
     }
 
     // only to be called on the root
-    pub fn insert(&mut self, new_v: T) -> Option<T> {
-        let res = self.insert_op(new_v);
+    pub fn insert<P>(&mut self, new_v: T, cmp: &P) -> Option<T>
+    where P: Fn(&T, &T) -> std::cmp::Ordering {
+        let res = self.insert_op(new_v, cmp);
         if self.is_red() {
             self.swap_colour();
         }
@@ -526,15 +495,15 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
-    fn remove_op<K: PartialOrd<T>>(&mut self, val: &K) -> Removal<T> {
+    fn remove_op<K, P>(&mut self, val: &K, cmp: &P) -> Removal<T>
+    where P: Fn(&K, &T) -> std::cmp::Ordering {
         match self {
             Internal(n) => {
-                let (res, right) = if *val == n.value {
-                    (Match, true)
-                } else if *val < n.value {
-                    (n.l_child.remove_op(val), false)
-                } else {
-                    (n.r_child.remove_op(val), true)
+                let order = cmp(val, &n.value);
+                let (res, right) = match order {
+                    Equal => (Match, true),
+                    Less => (n.l_child.remove_op(val, cmp), false),
+                    Greater => (n.r_child.remove_op(val, cmp), true)
                 };
                 self.remove_result_step(res, right)
             },
@@ -583,8 +552,9 @@ impl<T: PartialOrd> Node<T> {
     }
 
     // as with insertion, this should only be called on the root
-    pub fn remove<K: PartialOrd<T>>(&mut self, val: &K) -> Option<T> {
-        match self.remove_op(val) {
+    pub fn remove<K, P>(&mut self, val: &K, cmp: &P) -> Option<T>
+    where P: Fn(&K, &T) -> std::cmp::Ordering {
+        match self.remove_op(val, cmp) {
             NotFound => None,
             Removed(v) => {
                 Some(v)
@@ -598,16 +568,16 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
-    pub fn get<K: PartialOrd<T>>(&self, val: &K) -> Option<&T> {
+    pub fn get<K, P>(&self, val: &K, cmp: &P) -> Option<&T>
+    where P: Fn(&K, &T) -> std::cmp::Ordering {
         let mut cur = self;
         while !cur.is_leaf() {
             let cur_val = cur.value();
-            if val == cur_val.unwrap() {
-                return cur_val;
-            } else if val < cur_val.unwrap() {
-                cur = cur.get_left();
-            } else {
-                cur = cur.get_right();
+            let order = cmp(val, cur_val.unwrap());
+            match order {
+                Equal => return cur_val,
+                Less => cur = cur.get_left(),
+                Greater => cur = cur.get_right()
             }
         }
         match cur {
@@ -616,16 +586,16 @@ impl<T: PartialOrd> Node<T> {
         }
     }
 
-    pub fn get_mut<K: PartialOrd<T>>(&mut self, val: &K) -> Option<&mut T> {
+    pub fn get_mut<K, P>(&mut self, val: &K, cmp: &P) -> Option<&mut T>
+    where P: Fn(&K, &T) -> std::cmp::Ordering {
         let mut cur = self;
         while !cur.is_leaf() {
-            let cmp = cur.value().unwrap();
-            if val == cmp {
-                return cur.value_mut();
-            } else if val < cmp {
-                cur = cur.get_left_mut();
-            } else {
-                cur = cur.get_right_mut();
+            let cur_val = cur.value().unwrap();
+            let order = cmp(val, cur_val);
+            match order {
+                Equal => return cur.value_mut(),
+                Less => cur = cur.get_left_mut(),
+                Greater => cur = cur.get_right_mut()
             }
         }
         match cur {

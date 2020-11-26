@@ -1,6 +1,8 @@
 mod node;
 pub mod rbtree;
 pub mod rbmap;
+#[macro_use]
+pub mod rbqueue;
 mod helpers;
 mod mapper;
 #[cfg(test)]
@@ -21,4 +23,15 @@ pub struct RBMap<K: PartialOrd, V> {
 pub struct RBTree<T: PartialOrd> {
     root: Node<T>,
     contained: usize
+}
+
+/// A priority queue implemented using a red black
+/// tree. The ordering supplied must satisfy the assymetry
+/// and transitivity rules as outlined by  the dorumentation
+/// of std::cmp::PartialOrd.
+pub struct RBQueue<T, P> 
+where P: Fn(&T, &T) -> std::cmp::Ordering {
+    root: Node<T>,
+    contained: usize,
+    cmp: P
 }
