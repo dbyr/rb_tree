@@ -1,14 +1,14 @@
-# RBTree
-This crate contains an implementation of the Red Black tree data structure and several data structures that are built on top of this implementation. The data structures currently include RBTree and RBMap
+# rb_tree
+This crate contains an implementation of the Red Black tree data structure and several data structures that are built on top of this implementation. The data structures currently include RBTree, RBMap, and RBQueue
 
 ### RBTree
-This data structure can be used as a set, or a priority queue based on the values' `PartialOrd` ordering, and has methods to support both use cases 
+This data structure can be used as a set and has methods to support its use as a set. Methods specific to this data structure include set operations such as union, difference etc. Values are stored in their `PartialOrd` ordering.
 
 ### RBMap
 This data structure provides an interface for using the RBTree as a map. Values in the map are ordered by their keys' `PartialOrd` ordering.
 
-### Future Additions
-Currently all comparisons are done via the `PartialOrd` trait, meaning types must implement this trait in order to be used with the RBTree. I have plans to allow one to opt out of this requirement in favour of a user-provided comparison method. This will likely be v3.0, and include a type `RBQueue` or `RBPQueue` to provide this ability.
+### RBQueue
+This data structure allows the use of the underlying Red-Black tree as a priority queue. A comparison function is provided on instantiation (either with `RBQueue::new(Fn(&T, &T) -> std::cmp::Ordering)` or `rbqueue_c_new!(Fn(&T, &T) -> i8)`) which is used to order the entries.
 
 Examples:
 ```
@@ -50,5 +50,33 @@ fn main() {
     for i in 0..10 {
         assert_eq!(*squares.get(&i).unwrap(), (i as f64).powi(2) as u32);
     }
+}
+```
+
+```
+#[macro_use(rbqueue_c_new)]
+extern crate rb_tree;
+
+use rb_tree::RBQueue;
+
+fn main() {
+    
+    // use the default comarator
+    let mut q1 = RBQueue::new(|l: &i64, r| {
+        l.cmp(r)
+    });
+
+    // compare in the reverse order
+    let mut q2 = rbqueue_c_new!(|l: &i64, r| (r - l));
+
+    q1.insert(1);
+    q1.insert(2);
+    q1.insert(3);
+    q2.insert(1);
+    q2.insert(2);
+    q2.insert(3);
+
+    assert_eq!(q1.ordered(), [&1, &2, &3]);
+    assert_eq!(q2.ordered(), [&3, &2, &1]);
 }
 ```
