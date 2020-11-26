@@ -1,6 +1,7 @@
 mod node;
 pub mod rbtree;
 pub mod rbmap;
+#[macro_use]
 pub mod rbqueue;
 mod helpers;
 mod mapper;

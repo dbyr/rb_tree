@@ -680,7 +680,7 @@ impl<'a, T: PartialOrd> Iterator for Difference<'a, T> {
         let mut res = None;
         'left: while let Some(vl) = self.nextl {
             self.nextl = self.left.next();
-            'right: while let Some(vr) = self.nextr {
+            while let Some(vr) = self.nextr {
                 if vl < vr {
                     res = Some(vl);
                     break 'left;
@@ -717,7 +717,7 @@ impl<'a, T: PartialOrd> Iterator for SymmetricDifference<'a, T> {
         // select and store the next next
         let mut res = None;
         'left: while let Some(vl) = self.nextl {
-            'right: while let Some(vr) = self.nextr {
+            while let Some(vr) = self.nextr {
                 if vl < vr {
                     self.nextl = self.left.next();
                     res = Some(vl);
@@ -765,7 +765,7 @@ impl<'a, T: PartialOrd> Iterator for Intersection<'a, T> {
         // select and store the next next
         let mut res = None;
         'left: while let Some(vl) = self.nextl {
-            'right: while let Some(vr) = self.nextr {
+            while let Some(vr) = self.nextr {
                 if vl < vr {
                     self.nextl = self.left.next();
                     continue 'left;
@@ -803,7 +803,7 @@ impl<'a, T: PartialOrd> Iterator for Union<'a, T> {
         // select and store the next next
         let mut res = None;
         'left: while let Some(vl) = self.nextl {
-            'right: while let Some(vr) = self.nextr {
+            while let Some(vr) = self.nextr {
                 if vl < vr {
                     self.nextl = self.left.next();
                     res = Some(vl);

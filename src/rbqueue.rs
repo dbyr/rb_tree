@@ -6,6 +6,44 @@ use std::fmt::{Debug, Display, Result, Formatter};
 use crate::helpers::{write_to_level, ordered_insertion};
 use std::iter::{ExactSizeIterator, FusedIterator};
 
+/// Allows the creation of a queue using C-like
+/// comparison values. That is to say, `cmp`
+/// should return a value less than, equal to,
+/// or greater than 0 when `l` should be placed
+/// before, is equal to, or be placed after `r`
+/// respectively.
+/// 
+/// `cmp` should be a function that takes two values
+/// from the queue and returns an integer (i8)
+/// providing the information as above.
+/// 
+/// # Example:
+/// ```
+/// # #[macro_use(rbqueue_c_new)]
+/// # extern crate rb_tree;
+/// # use rb_tree::RBQueue;
+/// # fn main() {
+/// let mut q = rbqueue_c_new!(|l: &i64, r| (r - l));
+/// q.insert(1);
+/// q.insert(2);
+/// q.insert(3);
+/// assert_eq!(q.ordered(), [&3, &2, &1]);
+/// # }
+/// ```
+#[macro_export]
+macro_rules! rbqueue_c_new {
+    ($cmp:expr) => {
+        RBQueue::new(move |l, r| {
+            let comp = Box::new($cmp);
+            match comp(l, r) as i8 {
+                -128i8 ..= -1 => std::cmp::Ordering::Less,
+                0 => std::cmp::Ordering::Equal,
+                1 ..= 127i8 => std::cmp::Ordering::Greater
+            }
+        })
+    };
+}
+
 impl<T: Debug, P> Debug for RBQueue<T, P> 
 where P: Fn(&T, &T) -> std::cmp::Ordering {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -32,15 +70,39 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
 impl<T, P> RBQueue<T, P>
 where P: Fn(&T, &T) -> std::cmp::Ordering {
 
-    /// Creates and returns a new RBQueue.
+    /// Creates and returns a new RBQueue that
+    /// will order entries based on cmp.
+    /// 
+    /// It is a logic error to use a closure
+    /// where two non-identical items map to the
+    /// same value. If `cmp` returns Equal, then
+    /// the two keys are considered the same.
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
-    /// t.insert(3);
-    /// t.insert(2);
-    /// assert_eq!(t.take(&2).unwrap(), 2);
+    /// let mut t = RBQueue::<(i8, i8), _>::new(|l, r| {
+    ///     let l_sum = l.0 + l.1;
+    ///     let r_sum = r.0 + r.1;
+    ///     if l_sum == r_sum {
+    ///         if l.0 == r.0 {
+    ///             std::cmp::Ordering::Equal
+    ///         } else if l.0 < r.0 {
+    ///             std::cmp::Ordering::Less
+    ///         } else {
+    ///             std::cmp::Ordering::Greater
+    ///         }
+    ///     } else if l_sum < r_sum {
+    ///         std::cmp::Ordering::Less
+    ///     } else {
+    ///         std::cmp::Ordering::Greater
+    ///     }
+    /// });
+    /// 
+    /// t.insert((1, 1));
+    /// t.insert((1, 2));
+    /// t.insert((1, -1));
+    /// assert_eq!(t.peek().unwrap(), &(1, -1));
     /// ```
     pub fn new(cmp: P) -> RBQueue<T, P> {
         RBQueue {
@@ -50,38 +112,38 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
         }
     }
 
-    /// Clears all entries from the tree.
+    /// Clears all entries from the queue.
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut tree = RBQueue::new();
-    /// tree.insert(2);
-    /// tree.insert(5);
-    /// tree.clear();
-    /// assert_eq!(tree.len(), 0);
-    /// assert!(!tree.contains(&2));
+    /// let mut q = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
+    /// q.insert(2);
+    /// q.insert(5);
+    /// q.clear();
+    /// assert_eq!(q.len(), 0);
+    /// assert!(!q.contains(&2));
     /// ```
     pub fn clear(&mut self) {
         self.root = Leaf(Black);
         self.contained = 0;
     }
 
-    /// Clears the tree and returns all values
+    /// Clears the queue and returns all values
     /// as an iterator in their PartialOrd order.
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut tree = RBQueue::new();
-    /// tree.insert(2);
-    /// tree.insert(5);
-    /// assert_eq!(tree.len(), 2);
-    /// let mut drain = tree.drain();
+    /// let mut q = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
+    /// q.insert(2);
+    /// q.insert(5);
+    /// assert_eq!(q.len(), 2);
+    /// let mut drain = q.drain();
     /// assert_eq!(drain.next().unwrap(), 2);
     /// assert_eq!(drain.next().unwrap(), 5);
     /// assert!(drain.next().is_none());
-    /// assert_eq!(tree.len(), 0);
+    /// assert_eq!(q.len(), 0);
     /// ```
     pub fn drain(&mut self) -> Drain<T> {
         let mut vec = Vec::with_capacity(self.len());
@@ -101,7 +163,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(3);
     /// t.insert(1);
     /// t.insert(2);
@@ -120,7 +182,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(3);
     /// t.insert(1);
     /// t.insert(2);
@@ -138,7 +200,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// assert!(t.is_empty());
     /// t.insert(3);
     /// assert!(!t.is_empty());
@@ -158,7 +220,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<String, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// assert_eq!(t.insert("Hello".to_string()), true);
     /// assert_eq!(t.insert("Hello".to_string()), false);
     /// ```
@@ -180,7 +242,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<String, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// assert_eq!(t.replace("Hello".to_string()), None);
     /// assert_eq!(t.replace("Hello".to_string()), Some("Hello".to_string()));
     /// ```
@@ -200,7 +262,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(2);
     /// assert!(!t.contains(&3));
     /// assert!(t.contains(&2));
@@ -215,7 +277,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(1);
     /// assert_eq!(*t.get(&1).unwrap(), 1);
     /// assert_eq!(t.get(&2), None);
@@ -234,7 +296,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(4);
     /// t.insert(2);
     /// assert_eq!(t.take(&2).unwrap(), 2);
@@ -257,7 +319,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(4);
     /// t.insert(2);
     /// assert_eq!(t.remove(&2), true);
@@ -281,7 +343,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(2);
     /// t.insert(1);
     /// t.insert(3);
@@ -304,7 +366,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(2);
     /// t.insert(1);
     /// t.insert(3);
@@ -321,7 +383,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(2);
     /// t.insert(1);
     /// t.insert(3);
@@ -344,7 +406,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(2);
     /// t.insert(1);
     /// t.insert(3);
@@ -360,11 +422,11 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t = RBQueue::new();
+    /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(3);
     /// t.insert(1);
     /// t.insert(5);
-    /// assert_eq!(t.iter().collect::<Vec<&usize>>(), vec!(&1, &3, &5));
+    /// assert_eq!(t.iter().collect::<Vec<&i8>>(), vec!(&1, &3, &5));
     /// ```
     pub fn iter(&self) -> Iter<T> {
         Iter {
@@ -379,7 +441,8 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// ```
     /// use rb_tree::RBQueue;
     /// 
-    /// let mut t: RBQueue<usize> = (0..10).collect();
+    /// let mut t = RBQueue::<usize, _>::new(|l, r| l.partial_cmp(r).unwrap());
+    /// for i in 0usize..10usize { t.insert(i); }
     /// t.retain(|v| v % 2 == 0);
     /// assert_eq!(t.iter().collect::<Vec<&usize>>(), vec!(&0, &2, &4, &6, &8));
     /// ```
