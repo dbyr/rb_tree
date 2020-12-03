@@ -15,7 +15,7 @@ fn main() {
         let l_dist = from_origin(l);
         let r_dist = from_origin(r);
         if l_dist == r_dist {
-            l.0.abs() - r.0.abs()
+            l.0 - r.0
         } else {
             l_dist - r_dist
         }
