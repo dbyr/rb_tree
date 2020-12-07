@@ -45,7 +45,7 @@ macro_rules! rbqueue_c_new {
 }
 
 impl<T: Debug, P> Debug for RBQueue<T, P> 
-where P: Fn(&T, &T) -> std::cmp::Ordering {
+where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let mut levels = Vec::new();
         write_to_level(&self.root, "".to_string(), 0, &mut levels);
@@ -61,14 +61,14 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
 }
 
 impl<T: Debug, P> Display for RBQueue<T, P>
-where P: Fn(&T, &T) -> std::cmp::Ordering {
+where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{:?}", self.ordered())
     }
 }
 
 impl<T, P> RBQueue<T, P>
-where P: Fn(&T, &T) -> std::cmp::Ordering {
+where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
 
     /// Creates and returns a new RBQueue that
     /// will order entries based on cmp.
@@ -130,7 +130,7 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     }
 
     /// Clears the queue and returns all values
-    /// as an iterator in their PartialOrd order.
+    /// as an iterator in their order.
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
@@ -447,15 +447,13 @@ where P: Fn(&T, &T) -> std::cmp::Ordering {
     /// assert_eq!(t.iter().collect::<Vec<&usize>>(), vec!(&0, &2, &4, &6, &8));
     /// ```
     pub fn retain<F: FnMut(&T) -> bool>(&mut self, mut f: F) {
-        let mut tmp = Vec::new();
+        let mut tmp = RBQueue::new(self.cmp);
         while let Some(v) = self.pop() {
             if f(&v) {
-                tmp.push(v);
+                tmp.insert(v);
             }
         }
-        for v in tmp {
-            self.insert(v);
-        }
+        std::mem::swap(&mut tmp, self);
     }
 }
 
@@ -472,7 +470,7 @@ impl<T> Iterator for IntoIter<T> {
 }
 
 impl<T, P> IntoIterator for RBQueue<T, P>
-where P: Fn(&T, &T) -> std::cmp::Ordering {
+where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     type Item = T;
     type IntoIter = IntoIter<T>;
 

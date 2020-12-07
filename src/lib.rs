@@ -30,7 +30,7 @@ pub struct RBTree<T: PartialOrd> {
 /// and transitivity rules as outlined by  the dorumentation
 /// of std::cmp::PartialOrd.
 pub struct RBQueue<T, P> 
-where P: Fn(&T, &T) -> std::cmp::Ordering {
+where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     root: Node<T>,
     contained: usize,
     cmp: P
