@@ -1,9 +1,10 @@
 use crate::RBTree;
 
 use crate::node::Colour::Black;
+use crate::node::Node;
 use crate::node::Node::Leaf;
 use std::fmt::{Debug, Display, Result, Formatter};
-use crate::helpers::{write_to_level, ordered_insertion};
+use crate::helpers::{write_to_level, ordered_insertion, insert_left_down};
 use std::iter::{ExactSizeIterator, FusedIterator, FromIterator};
 
 fn partial_ord<T, K: PartialOrd<T>>(l: &K, r: &T) -> std::cmp::Ordering {
@@ -367,9 +368,11 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(t.iter().collect::<Vec<&usize>>(), vec!(&1, &3, &5));
     /// ```
     pub fn iter(&self) -> Iter<T> {
+        let mut ordered = Vec::new();
+        insert_left_down(&self.root, &mut ordered);
         Iter {
-            pos: 0,
-            ordered: self.ordered()
+            remaining: self.len(),
+            ordered: ordered
         }
     }
 
@@ -637,28 +640,27 @@ impl<T: PartialOrd> ExactSizeIterator for Drain<T> {
 impl<T: PartialOrd> FusedIterator for Drain<T> {}
 
 pub struct Iter<'a, T: PartialOrd> {
-    pos: usize,
-    ordered: Vec<&'a T>
+    remaining: usize,
+    ordered: Vec<&'a Node<T>>
 }
 
 impl<'a, T: PartialOrd> Iterator for Iter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<&'a T> {
-        let ret = self.ordered.get(self.pos);
-        match ret {
-            Some(v) => {
-                self.pos += 1;
-                Some(*v)
-            },
-            None => None
-        }
+        let next = match self.ordered.pop() {
+            Some(n) => n,
+            None => return None
+        };
+        self.remaining -= 1;
+        insert_left_down(next.get_right(), &mut self.ordered);
+        Some(next.value().unwrap())
     }
 }
 
 impl<'a, T: PartialOrd> ExactSizeIterator for Iter<'a, T> {
     fn len(&self) -> usize {
-        self.ordered.len() - self.pos
+        self.remaining
     }
 }
 

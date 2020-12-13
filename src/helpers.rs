@@ -49,3 +49,13 @@ pub fn ordered_insertion<'a, T>(cur: &'a Node<T>, order: &mut Vec<&'a T>) {
     }
     ordered_insertion(cur.get_right(), order);
 }
+
+// inserts into stack start and all left children
+// of start down to the leaf
+pub fn insert_left_down<'a, T>(start: &'a Node<T>, stack: &mut Vec<&'a Node<T>>) {
+    let mut cur = start;
+    while !cur.is_leaf() {
+        stack.push(cur);
+        cur = cur.get_left();
+    }
+}
