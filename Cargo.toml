@@ -1,7 +1,7 @@
 [package]
 name = "rb_tree"
 description = "A Red Black Tree implementation in Rust"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["dbyr <david.michael.byrne17@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/dbyr/rb_tree"
