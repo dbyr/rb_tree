@@ -225,10 +225,6 @@ impl<T: PartialOrd> RBTree<T> {
         self.root.get_mut(val, &partial_ord)
     }
 
-    // pub fn at(&self, index: usize) -> Option<&T> {
-
-    // }
-
     /// Removes an item the tree. Returns the matching item
     /// if it was contained in the tree, None otherwise.
     /// # Example:

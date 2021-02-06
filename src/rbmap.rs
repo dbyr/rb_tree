@@ -169,6 +169,102 @@ impl<K: PartialOrd, V> RBMap<K, V> {
         }
     }
 
+    /// Returns an option containing a reference to the
+    /// value associated with the key that has the smallest
+    /// `PartialOrd` value.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut map = RBMap::new();
+    /// assert_eq!(map.peek(), None);
+    ///
+    /// map.insert(5, "Hello");
+    /// map.insert(2, "World");
+    /// map.insert(7, "Foo");
+    /// map.insert(6, "Bar");
+    ///
+    /// assert_eq!(map.peek().unwrap(), &"World");
+    /// ```
+    pub fn peek(&self) -> Option<&V> {
+        match self.map.peek() {
+            Some(v) => Some(v.as_ref()),
+            None => None
+        }
+    }
+
+    /// Returns an option containing a reference to the
+    /// value associated with the key that has the largest
+    /// `PartialOrd` value.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut map = RBMap::new();
+    /// assert_eq!(map.peek_back(), None);
+    ///
+    /// map.insert(5, "Hello");
+    /// map.insert(2, "World");
+    /// map.insert(7, "Foo");
+    /// map.insert(6, "Bar");
+    ///
+    /// assert_eq!(map.peek_back().unwrap(), &"Foo");
+    /// ```
+    pub fn peek_back(&self) -> Option<&V> {
+        match self.map.peek_back() {
+            Some(v) => Some(v.as_ref()),
+            None => None
+        }
+    }
+
+    /// Returns an option containing a pair with a reference to the
+    /// key with the smallest `PartialOrd` value and a reference
+    /// to its associated value.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut map = RBMap::new();
+    /// assert_eq!(map.peek_pair(), None);
+    ///
+    /// map.insert(5, "Hello");
+    /// map.insert(2, "World");
+    /// map.insert(7, "Foo");
+    /// map.insert(6, "Bar");
+    ///
+    /// assert_eq!(map.peek_pair().unwrap(), (&2, &"World"));
+    /// ```
+    pub fn peek_pair(&self) -> Option<(&K, &V)> {
+        match self.map.peek() {
+            Some(v) => Some(v.pair()),
+            None => None
+        }
+    }
+
+    /// Returns an option containing a pair with a reference to the
+    /// key with the largest `PartialOrd` value and a reference
+    /// to its associated value.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut map = RBMap::new();
+    /// assert_eq!(map.peek_pair_back(), None);
+    ///
+    /// map.insert(5, "Hello");
+    /// map.insert(2, "World");
+    /// map.insert(7, "Foo");
+    /// map.insert(6, "Bar");
+    ///
+    /// assert_eq!(map.peek_pair_back().unwrap(), (&7, &"Foo"));
+    /// ```
+    pub fn peek_pair_back(&self) -> Option<(&K, &V)> {
+        match self.map.peek_back() {
+            Some(v) => Some(v.pair()),
+            None => None
+        }
+    }
+
     /// Inserts a value to associate with the given key
     /// into the map, returning the previously-stored key-value
     /// pair if one existed, None otherwise.
@@ -261,6 +357,102 @@ impl<K: PartialOrd, V> RBMap<K, V> {
         match self.map.take(
             &Mapper::new(key, None)
         ) {
+            Some(v) => Some(v.consume()),
+            None => None
+        }
+    }
+
+    /// Removes the pair associated with the key that has the smallest
+    /// `PartialOrd` value and returns the associated value.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut map = RBMap::new();
+    /// assert_eq!(map.pop(), None);
+    ///
+    /// map.insert(5, "Hello");
+    /// map.insert(2, "World");
+    /// map.insert(7, "Foo");
+    /// map.insert(6, "Bar");
+    ///
+    /// assert_eq!(map.pop().unwrap(), "World");
+    /// assert_eq!(map.pop().unwrap(), "Hello");
+    /// ```
+    pub fn pop(&mut self) -> Option<V> {
+        match self.map.pop() {
+            Some(v) => Some(v.consume().1),
+            None => None
+        }
+    }
+
+    /// Removes the pair associated with the key that has the largest
+    /// `PartialOrd` value and returns the associated value.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut map = RBMap::new();
+    /// assert_eq!(map.pop(), None);
+    ///
+    /// map.insert(5, "Hello");
+    /// map.insert(2, "World");
+    /// map.insert(7, "Foo");
+    /// map.insert(6, "Bar");
+    ///
+    /// assert_eq!(map.pop_back().unwrap(), "Foo");
+    /// assert_eq!(map.pop_back().unwrap(), "Bar");
+    /// ```
+    pub fn pop_back(&mut self) -> Option<V> {
+        match self.map.pop_back() {
+            Some(v) => Some(v.consume().1),
+            None => None
+        }
+    }
+
+    /// Removes the pair associated with the key that has the smallest
+    /// `PartialOrd` value and returns it.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut map = RBMap::new();
+    /// assert_eq!(map.pop_pair(), None);
+    ///
+    /// map.insert(5, "Hello");
+    /// map.insert(2, "World");
+    /// map.insert(7, "Foo");
+    /// map.insert(6, "Bar");
+    ///
+    /// assert_eq!(map.pop_pair().unwrap(), (2, "World"));
+    /// assert_eq!(map.pop_pair().unwrap(), (5, "Hello"));
+    /// ```
+    pub fn pop_pair(&mut self) -> Option<(K, V)> {
+        match self.map.pop() {
+            Some(v) => Some(v.consume()),
+            None => None
+        }
+    }
+
+    /// Removes the pair associated with the key that has the smallest
+    /// `PartialOrd` value and returns it.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut map = RBMap::new();
+    /// assert_eq!(map.pop_pair_back(), None);
+    ///
+    /// map.insert(5, "Hello");
+    /// map.insert(2, "World");
+    /// map.insert(7, "Foo");
+    /// map.insert(6, "Bar");
+    ///
+    /// assert_eq!(map.pop_pair_back().unwrap(), (7, "Foo"));
+    /// assert_eq!(map.pop_pair_back().unwrap(), (6, "Bar"));
+    /// ```
+    pub fn pop_pair_back(&mut self) -> Option<(K, V)> {
+        match self.map.pop_back() {
             Some(v) => Some(v.consume()),
             None => None
         }
