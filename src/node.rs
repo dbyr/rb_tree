@@ -1,5 +1,5 @@
 use std::boxed::Box;
-use std::ops::DerefMut;
+use std::ops::{DerefMut, Deref};
 use std::mem::swap as m_swap;
 use std::cmp::Ordering::{Equal, Greater, Less};
 
@@ -246,6 +246,16 @@ impl<T> Node<T> {
             Leaf(_) => panic!("Attempted to get child of leaf")
         }
     }
+    fn peek_child(&self, right: bool) -> &Node<T> {
+        match self {
+            Internal(n) => if right {
+                n.r_child.deref()
+            } else {
+                n.l_child.deref()
+            },
+            Leaf(_) => panic!("Attempted to get child of leaf")
+        }
+    }
 
     fn inner_switcheroo(&mut self, right: bool) {
         let mut tmp = Leaf(Black);
@@ -374,46 +384,45 @@ impl<T> Node<T> {
 
     // returns true if double black propogates
     fn deletion_switcheroo(&mut self) -> bool {
-        let right = if self.get_right().is_double_black() {
-            false
-        } else {
-            true
-        };
-        if self.child(right).is_black() {
-            let self_col = self.colour();
-            if self.child(right).child(!right).is_red() {
-                self.inner_switcheroo(right);
-            } else if self.child(right).child(right).is_red() {
-                self.outer_switcheroo(right);
-            } else {
-                self.child(right).red();
-                self.child(!right).black();
-                if self.is_black() {
-                    self.double_black();
-                    return true;
-                } else {
-                    self.black();
-                    return false;
-                }
-            }
+        let mut right = !self.get_right().is_double_black();
+        let mut cur = self;
 
-            // recolour things appropriately
-            match self_col {
-                Black => self.black(),
-                Red => self.red(),
-                _ => panic!("Double black at local root")
-            }
-            self.child(right).black();
-            self.child(!right).child(!right).black();
-            self.child(!right).black();
+        // get to the bottom
+        while cur.child(right).is_red() {
+            cur.outer_switcheroo(right);
+            cur.black();
+            cur.child(!right).red();
+            cur = cur.child(!right);
+            right = !cur.get_right().is_double_black();
+        }
+
+        // perform the deletion
+        let self_col = cur.colour();
+        if cur.child(right).child(!right).is_red() {
+            cur.inner_switcheroo(right);
+        } else if cur.child(right).child(right).is_red() {
+            cur.outer_switcheroo(right);
         } else {
-            self.outer_switcheroo(right);
-            self.black();
-            self.child(!right).red();
-            if self.child(!right).deletion_switcheroo() {
-                return self.deletion_switcheroo();
+            cur.child(right).red();
+            cur.child(!right).black();
+            if cur.is_black() {
+                cur.double_black();
+                return true;
+            } else {
+                cur.black();
+                return false;
             }
         }
+
+        // recolour things appropriately
+        match self_col {
+            Black => cur.black(),
+            Red => cur.red(),
+            _ => panic!("Double black at local root")
+        }
+        cur.child(right).black();
+        cur.child(!right).child(!right).black();
+        cur.child(!right).black();
         false
     }
 
@@ -596,18 +605,10 @@ impl<T> Node<T> {
     pub fn peek(&self, back: bool) -> Option<&T> {
         let mut cur = self;
         while !cur.is_leaf() {
-            if back {
-                if !cur.get_right().is_leaf() {
-                    cur = cur.get_right();
-                } else {
-                    break;
-                }
+            if !cur.peek_child(back).is_leaf() {
+                cur = cur.peek_child(back);
             } else {
-                if !cur.get_left().is_leaf() {
-                    cur = cur.get_left();
-                } else {
-                    break;
-                }
+                break;
             }
         }
         match cur {
