@@ -514,26 +514,15 @@ impl<T> Node<T> {
     }
 
     fn pop_op(&mut self, back: bool) -> Removal<T> {
-        match self {
-            Internal(n) => {
-                if back {
-                    if n.r_child.is_leaf() {
-                        self.remove_result_step(Match, true)
-                    } else {
-                        n.r_child.pop_op(back)
-                    }
-                } else {
-                    if n.l_child.is_leaf() {
-                        self.remove_result_step(Match, true)
-                    } else {
-                        n.l_child.pop_op(back)
-                    }
-                }
-            },
-            Leaf(_) => {
-                NotFound
+        let mut cur = self;
+        while !cur.is_leaf() {
+            if cur.child(back).is_leaf() {
+                return cur.remove_result_step(Match, true);
+            } else {
+                cur = cur.child(back);
             }
         }
+        NotFound
     }
 
     pub fn pop(&mut self, back: bool) -> Option<T> {
