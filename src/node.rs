@@ -405,13 +405,13 @@ impl<T> Node<T> {
         } else {
             cur.child(right).red();
             cur.child(!right).black();
-            if cur.is_black() {
+            return if cur.is_black() {
                 cur.double_black();
-                return true;
+                true
             } else {
                 cur.black();
-                return false;
-            }
+                false
+            };
         }
 
         // recolour things appropriately
