@@ -456,9 +456,9 @@ impl<T> Node<T> {
     }
 
     fn swap_doubles_up(&mut self, right: bool) -> bool {
-        if self.child(!right).is_double_black() {
-            self.deletion_switcheroo()
-        } else if self.child(!right).swap_doubles_up(right) {
+        if self.child(right).is_double_black()
+                || self.child(!right).is_double_black() 
+                || self.child(!right).swap_doubles_up(right) {
             self.deletion_switcheroo()
         } else {
             false

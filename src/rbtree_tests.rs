@@ -1,4 +1,4 @@
-use crate::RBTree;
+use crate::{RBTree, RBMap};
 use crate::node::Node;
 use crate::node::Colour::*;
 
@@ -583,6 +583,25 @@ fn test_removeal_case4() {
         2->___ 2->R:3 5->___ 5->R:6\n\
         3->___ 3->___ 6->___ 6->___"
     );
+}
+
+#[test]
+fn test_remove_immediate_right_double_black() {
+    let mut rbmap = RBMap::<usize, usize>::new();
+    rbmap.insert(17, 0);
+    rbmap.insert(18, 0);
+    rbmap.insert(19, 0);
+    rbmap.insert(20, 0);
+    rbmap.insert(21, 0);
+    rbmap.insert(22, 0);
+    rbmap.insert(23, 0);
+    rbmap.insert(24, 0);
+    rbmap.insert(25, 0);
+    rbmap.insert(26, 3);
+    rbmap.insert(27, 2);
+    rbmap.insert(28, 0);
+    assert_eq!(rbmap.remove(&27), Some(2));
+    assert_eq!(rbmap.remove(&26), Some(3));
 }
 
 #[test]
