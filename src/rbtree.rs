@@ -1,10 +1,10 @@
 use crate::RBTree;
-
 use crate::node::Colour::Black;
 use crate::node::Node;
 use crate::node::Node::Leaf;
-use std::fmt::{Debug, Display, Result, Formatter};
 use crate::helpers::{write_to_level, ordered_insertion, insert_left_down};
+
+use std::fmt::{Debug, Display, Result, Formatter};
 use std::iter::{ExactSizeIterator, FusedIterator, FromIterator};
 
 fn partial_ord<T, K: PartialOrd<T>>(l: &K, r: &T) -> std::cmp::Ordering {

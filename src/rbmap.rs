@@ -1,8 +1,31 @@
 use crate::{RBMap, RBTree};
-
+use crate::helpers::write_to_level;
 use crate::rbtree;
 use crate::mapper::Mapper;
+
 use std::iter::{ExactSizeIterator, FusedIterator, FromIterator};
+use std::fmt::{Debug, Result, Formatter, Display};
+
+impl<K: PartialOrd + Debug, V: Debug> Debug for RBMap<K, V> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let mut levels = Vec::new();
+        write_to_level(&self.map.root, "".to_string(), 0, &mut levels);
+        let mut f_string = "".to_string();
+        for i in 0..levels.len() {
+            f_string += &levels[i];
+            if i != levels.len() - 1 {
+                f_string += "\n";
+            }
+        }
+        write!(f, "{}", f_string)
+    }
+}
+
+impl<K: PartialOrd + Debug, V: Debug> Display for RBMap<K, V> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{:?}", self.ordered())
+    }
+}
 
 impl<K: PartialOrd, V> RBMap<K, V> {
 

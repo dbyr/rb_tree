@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter, Result};
+
 pub struct Mapper<K: PartialOrd, V> {
     key: K,
     val: Option<V>
@@ -42,6 +44,12 @@ impl<K: PartialOrd, V> Mapper<K, V> {
 
     pub fn mut_pair(&mut self) -> (&K, &mut V) {
         (&self.key, self.val.as_mut().unwrap())
+    }
+}
+
+impl<K: PartialOrd + Debug, V: Debug> Debug for Mapper<K, V> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "[{:?}: {:?}]", self.key, self.val)
     }
 }
 
