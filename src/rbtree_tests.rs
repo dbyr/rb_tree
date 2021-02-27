@@ -869,3 +869,34 @@ fn test_union() {
         vec!(&1, &2, &3, &4, &5)
     );
 }
+
+#[test]
+fn test_iterator() {
+    let mut t = RBTree::new();
+    t.insert(41);
+    t.insert(21);
+    t.insert(4);
+    t.insert(0);
+    t.insert(37);
+    t.insert(5);
+    t.insert(2);
+    t.insert(15);
+    t.insert(7);
+    t.insert(13);
+    t.insert(26);
+    t.insert(23);
+    t.insert(14);
+    t.insert(34);
+    t.insert(1);
+
+    let expected = [
+        0, 1, 2, 4,
+        5, 7, 13, 14,
+        15, 21, 23, 26,
+        34, 37, 41
+    ];
+
+    for (i, v) in t.iter().enumerate() {
+        assert_eq!(v, &expected[i]);
+    }
+}
