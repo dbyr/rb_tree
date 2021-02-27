@@ -256,6 +256,16 @@ impl<T> Node<T> {
             Leaf(_) => panic!("Attempted to get child of leaf")
         }
     }
+    fn child_safe(&mut self, right: bool) -> &mut Node<T> {
+        match self {
+            Internal(n) => if right {
+                n.r_child.deref_mut()
+            } else {
+                n.l_child.deref_mut()
+            },
+            Leaf(_) => self
+        }
+    }
 
     /*
     visual of this operation (for right=true, mirror for right=false)
@@ -421,11 +431,10 @@ impl<T> Node<T> {
         }
         
         // do switcheroos if required
-        if self.child(!right).child(right).is_red() {
+        if self.child(!right).child_safe(right).is_red() {
             self.inner_switcheroo(!right);
             was_red = true;
-            
-        } else if self.child(!right).child(!right).is_red() {
+        } else if self.child(!right).child_safe(!right).is_red() {
             self.outer_switcheroo(!right);
             was_red = true;
         }
@@ -437,7 +446,7 @@ impl<T> Node<T> {
             }
             self.child(!right).black();
             self.child(right).black();
-            self.child(right).child(right).black();
+            self.child(right).child_safe(right).black();
             false
         } else {
             self.child(right).black();
