@@ -638,6 +638,33 @@ fn test_gets_correct_descendant() {
 }
 
 #[test]
+fn test_complicated_example() {
+    let mut t = RBTree::new();
+    t.insert(41);
+    t.insert(21);
+    t.insert(4);
+    t.insert(0);
+    t.insert(37);
+    t.insert(5);
+    t.insert(2);
+    t.insert(15);
+    t.insert(7);
+    t.insert(13);
+
+    assert_eq!(t.take(&37), Some(37));
+
+    t.insert(26);
+    t.insert(23);
+    t.insert(14);
+    t.insert(34);
+    t.insert(1);
+
+    assert_eq!(t.take(&21), Some(21));
+    assert_eq!(t.take(&2), Some(2));
+    assert_eq!(t.take(&13), Some(13));
+}
+
+#[test]
 fn test_get() {
     let mut t = RBTree::new();
     assert_eq!(t.get(&3), None);

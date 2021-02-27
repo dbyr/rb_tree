@@ -257,6 +257,15 @@ impl<T> Node<T> {
         }
     }
 
+    /*
+    visual of this operation (for right=true, mirror for right=false)
+
+       self                 c
+       /  \               /   \
+      a    b    --->     a    self
+     / \  / \           / \  /   \
+          c                       b
+    */
     fn inner_switcheroo(&mut self, right: bool) {
         let mut tmp = Leaf(Black);
         let mut l_child_tmp = Leaf(Black);
@@ -271,6 +280,15 @@ impl<T> Node<T> {
         m_swap(self.child(true).child(false), &mut r_child_tmp);
     }
 
+    /*
+    visual of this operation (for right=true, mirror for right=false)
+
+       self                 b
+       /  \               /  \
+      a    b    --->   self   c
+     / \  / \          / \   / \
+             c        a
+    */
     fn outer_switcheroo(&mut self, right: bool) {
         let mut tmp = Leaf(Black);
         let mut child_tmp = Leaf(Black);
@@ -382,114 +400,118 @@ impl<T> Node<T> {
         }
     }
 
-    // returns true if double black propogates
-    fn deletion_switcheroo(&mut self) -> bool {
-        let mut right = !self.get_right().is_double_black();
-        let mut cur = self;
+    // https://www.usna.edu/Users/cs/crabbe/SI321/current/red-black/red-black.html
+    // returns true if double black propogates (i.e., if
+    // self is double black after having called this method on it)
+    // should only be called on the PARENT of a
+    // double black node (right is true if the double
+    // black is the right child, false otherwise)
+    fn deletion_switcheroo(&mut self, right: bool) -> bool {
+        let mut was_red = false;
 
-        // get to the bottom
-        while cur.child(right).is_red() {
-            cur.outer_switcheroo(right);
-            cur.black();
-            cur.child(!right).red();
-            cur = cur.child(!right);
-            right = !cur.get_right().is_double_black();
-        }
-
-        // perform the deletion
-        let self_col = cur.colour();
-        if cur.child(right).child(!right).is_red() {
-            cur.inner_switcheroo(right);
-        } else if cur.child(right).child(right).is_red() {
-            cur.outer_switcheroo(right);
-        } else {
-            cur.child(right).red();
-            cur.child(!right).black();
-            return if cur.is_black() {
-                cur.double_black();
-                true
-            } else {
-                cur.black();
-                false
-            };
-        }
-
-        // recolour things appropriately
-        match self_col {
-            Black => cur.black(),
-            Red => cur.red(),
-            _ => panic!("Double black at local root")
-        }
-        cur.child(right).black();
-        cur.child(!right).child(!right).black();
-        cur.child(!right).black();
-        false
-    }
-
-    fn swap_innermost_descendant(&mut self) -> (T, bool) {
-        let mut ret = Leaf(Black);
-        let mut doubled = false;
-        let right;
-        
-        // decide which value to switch with, if any
-        let mut node = if !self.get_right().is_leaf() {
-            right = true;
-            self.child(right)
-        } else if !self.get_left().is_leaf() {
-            right = false;
-            self.child(right)
-        } else {
-            if self.is_black() {doubled = true; ret = Leaf(DBlack)}
-            m_swap(self, &mut ret);
-            return (ret.gut().value, doubled);
-        };
-        while !node.child(!right).is_leaf() {
-            node = node.child(!right);
-        }
-
-        // ensure the swap's child remains attached
-        // and fix the black depth
-        m_swap(&mut ret, node.child(right));
-        if node.is_black() {
-            if ret.is_red() {
-                ret.swap_colour();
-            } else {
-                doubled = true;
-                ret.double_black();
+        // unique case
+        if self.child(!right).is_red() {
+            self.outer_switcheroo(!right);
+            self.black();
+            self.child(right).red();
+            self.child(right).deletion_switcheroo(right);
+            if !self.child(right).is_double_black() {
+                return false;
             }
         }
-        m_swap(&mut ret, node);
-        let mut retval = ret.gut().value;
-        m_swap(&mut self.innards().value, &mut retval);
-        (retval, doubled)
+        
+        // do switcheroos if required
+        if self.child(!right).child(right).is_red() {
+            self.inner_switcheroo(!right);
+            was_red = true;
+            
+        } else if self.child(!right).child(!right).is_red() {
+            self.outer_switcheroo(!right);
+            was_red = true;
+        }
+
+        // recolour appropriately
+        if was_red {
+            if self.colour() != self.child(right).colour() {
+                self.swap_colour();
+            }
+            self.child(!right).black();
+            self.child(right).black();
+            self.child(right).child(right).black();
+            false
+        } else {
+            self.child(right).black();
+            self.child(!right).red();
+            if self.is_red() { self.black(); false }
+            else { self.double_black(); true }
+        }
     }
 
-    fn swap_doubles_up(&mut self, right: bool) -> bool {
-        if self.child(right).is_double_black()
-                || self.child(!right).is_double_black() 
-                || self.child(!right).swap_doubles_up(right) {
-            self.deletion_switcheroo()
+    // either swap the left-most right descendant, or just
+    // swap the immediate left child if the right child
+    // is a leaf
+    fn swap_innermost_descendant(&mut self) -> Removal<T> {
+        let mut tmp = Leaf(Black);
+        let mut doubled = false;
+        if !self.get_right().is_leaf() {
+            let mut innermost = self.get_right_mut();
+            while !innermost.get_left().is_leaf() {
+                innermost = innermost.get_left_mut();
+            }
+            m_swap(&mut tmp, innermost.get_right_mut());
+            if innermost.is_black() {
+                if tmp.is_black() {
+                    tmp.double_black();
+                    doubled = true;
+                } else {
+                    tmp.black()
+                }
+            }
+            m_swap(&mut tmp, innermost);
+            m_swap(&mut self.innards().value, &mut tmp.innards().value);
+            if doubled { Doubled(tmp.gut().value) }
+            else { Removed(tmp.gut().value) }
         } else {
-            false
+            m_swap(self.get_left_mut(), &mut tmp);
+            if self.is_black() {
+                if tmp.is_black() {
+                    tmp.double_black();
+                    doubled = true;
+                } else {
+                    tmp.black();
+                }
+            }
+            m_swap(&mut tmp, self);
+            if doubled { Doubled(tmp.gut().value) }
+            else { Removed(tmp.gut().value) }
+        }
+    }
+
+    fn bring_double_up_root(&mut self) -> bool {
+        if self.get_right().is_double_black() {
+            self.deletion_switcheroo(true)
+        } else {
+            self.get_right_mut().bring_double_up()
+        }
+    }
+    fn bring_double_up(&mut self) -> bool {
+        if self.get_left().is_double_black() {
+            self.deletion_switcheroo(false)
+        } else {
+            self.get_left_mut().bring_double_up()
         }
     }
 
     fn remove_result_step(&mut self, res: Removal<T>, right: bool) -> Removal<T> {
         match res {
             Match => {
-                let (ret, doubled) = self.swap_innermost_descendant();
-                if doubled {
-                    Doubled(ret)
-                } else {
-                    Removed(ret)
-                }
+                self.swap_innermost_descendant()
             },
             Doubled(n) => {
                 let doubled =
-                if self.child(right).is_double_black() {
-                    self.deletion_switcheroo()
-                } else if self.child(right).swap_doubles_up(right) {
-                    self.deletion_switcheroo()
+                if self.child(right).is_double_black()
+                        || self.child(right).bring_double_up_root() {
+                    self.deletion_switcheroo(right)
                 } else {
                     false
                 };
