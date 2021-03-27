@@ -7,6 +7,8 @@ mod helpers;
 mod mapper;
 #[cfg(test)]
 mod rbtree_tests;
+#[cfg(test)]
+mod rbmap_tests;
 
 use node::Node;
 use mapper::Mapper;

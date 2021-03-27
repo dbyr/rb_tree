@@ -1,4 +1,4 @@
-use crate::RBQueue;
+use crate::{RBQueue, RBTree};
 
 use crate::node::Colour::Black;
 use crate::node::Node::Leaf;
@@ -454,6 +454,37 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
             }
         }
         std::mem::swap(&mut tmp, self);
+    }
+}
+
+impl<T, P> RBQueue<T, P>
+where T: PartialOrd, P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
+
+    /// Turns this queue into a set (RBTree)
+    /// # Example: 
+    /// ```
+    /// use rb_tree::{RBQueue, RBTree};
+    /// use std::cmp::Ordering::{Equal, Less, Greater};
+    /// 
+    /// let mut q = RBQueue::new(|l, r| {
+    ///     match l - r {
+    ///         i32::MIN..=-1_i32 => Greater,
+    ///         0 => Equal,
+    ///         1_i32..=i32::MAX => Less
+    ///     }
+    /// });
+    /// q.insert(1);
+    /// q.insert(2);
+    /// q.insert(3);
+    /// 
+    /// let mut t = q.to_set();
+    /// assert_eq!(t.pop().unwrap(), 1);
+    /// assert_eq!(t.pop().unwrap(), 2);
+    /// assert_eq!(t.pop().unwrap(), 3);
+    /// assert_eq!(t.pop(), None);
+    /// ```
+    pub fn to_set(self) -> RBTree<T> {
+        self.into_iter().collect()
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::RBTree;
+use crate::{RBTree, RBQueue};
 use crate::node::Colour::Black;
 use crate::node::Node;
 use crate::node::Node::Leaf;
@@ -49,6 +49,40 @@ impl<T: PartialOrd> RBTree<T> {
             root: Leaf(Black),
             contained: 0
         }
+    }
+
+    /// Turns this tree into a queue with the given
+    /// the comparison method.
+    /// # Example:
+    /// ```
+    /// use rb_tree::{RBTree, RBQueue};
+    /// use std::cmp::Ordering::{Equal, Less, Greater};
+    /// 
+    /// let mut t = RBTree::new();
+    /// t.insert(3);
+    /// t.insert(2);
+    /// t.insert(1);
+    /// 
+    /// // reverse order queue
+    /// let mut q = t.to_queue(|l, r| {
+    ///     match l - r {
+    ///         i32::MIN..=-1_i32 => Greater,
+    ///         0 => Equal,
+    ///         1_i32..=i32::MAX => Less
+    ///     }
+    /// });
+    /// assert_eq!(q.pop().unwrap(), 3);
+    /// assert_eq!(q.pop().unwrap(), 2);
+    /// assert_eq!(q.pop().unwrap(), 1);
+    /// assert_eq!(q.pop(), None);
+    /// ```
+    pub fn to_queue<P>(self, comp: P) -> RBQueue<T, P> 
+    where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
+        let mut queue = RBQueue::new(comp);
+        for v in self {
+            queue.insert(v);
+        }
+        queue
     }
 
     /// Clears all entries from the tree.

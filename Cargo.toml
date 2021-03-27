@@ -11,3 +11,8 @@ keywords = ["red", "tree", "set", "balanced", "priority"]
 categories = ["data-structures"]
 license = "MIT OR Apache-2.0"
 exclude = [".github*", ".gitignore"]
+
+[dev-dependencies]
+fnv = "^1.0.7"
+rand = "0.8.3"
+rand_chacha = "0.3.0"
