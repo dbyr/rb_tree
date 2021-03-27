@@ -8,7 +8,7 @@ mod mapper;
 #[cfg(test)]
 mod rbtree_tests;
 #[cfg(test)]
-mod rbmap_tests;
+mod stress_test;
 
 use node::Node;
 use mapper::Mapper;
@@ -37,3 +37,9 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     contained: usize,
     cmp: P
 }
+
+// !macro_rules! new {
+//     () => {
+        
+//     };
+// }
