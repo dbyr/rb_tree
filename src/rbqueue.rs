@@ -515,13 +515,13 @@ impl<T> Iterator for IntoIter<T> {
 /// let _ = iterator.next();
 /// assert_eq!(iterator.len(), 2);
 /// ```
-impl<T: PartialOrd> ExactSizeIterator for IntoIter<T>  {
+impl<T> ExactSizeIterator for IntoIter<T>  {
     fn len(&self) -> usize {
         self.order.len()
     }
 }
 
-impl<T: PartialOrd> FusedIterator for IntoIter<T> {}
+impl<T> FusedIterator for IntoIter<T> {}
 
 impl<T, P> IntoIterator for RBQueue<T, P>
 where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
