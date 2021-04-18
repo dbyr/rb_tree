@@ -646,13 +646,19 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn entry(&mut self, key: K) -> Entry<K, V> {
         Entry {
             map: self,
-            key: key
+            key
         }
     }
 
     // internal helper methods
     fn ordered(&self) -> Vec<(&K, &V)> {
         self.map.iter().map(|m| (m.key(), m.as_ref())).collect()
+    }
+}
+
+impl<K: PartialOrd, V> Default for RBMap<K, V> {
+    fn default() -> Self {
+        RBMap::new()
     }
 }
 

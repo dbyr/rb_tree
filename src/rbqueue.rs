@@ -108,7 +108,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
         RBQueue {
             root: Leaf(Black),
             contained: 0,
-            cmp: cmp
+            cmp
         }
     }
 
@@ -206,11 +206,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// assert!(!t.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
-        if self.len() == 0 {
-            true
-        } else {
-            false
-        }
+        self.len() == 0
     }
 
     /// Inserts a new element into the RBQueue.
@@ -268,7 +264,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// assert!(t.contains(&2));
     /// ```
     pub fn contains(&self, val: &T) -> bool {
-        !self.get(val).is_none()
+        self.get(val).is_some()
     }
 
     /// Returns the item specified if contained,
@@ -477,13 +473,13 @@ where T: PartialOrd, P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// q.insert(2);
     /// q.insert(3);
     /// 
-    /// let mut t = q.to_set();
+    /// let mut t = q.into_set();
     /// assert_eq!(t.pop().unwrap(), 1);
     /// assert_eq!(t.pop().unwrap(), 2);
     /// assert_eq!(t.pop().unwrap(), 3);
     /// assert_eq!(t.pop(), None);
     /// ```
-    pub fn to_set(self) -> RBTree<T> {
+    pub fn into_set(self) -> RBTree<T> {
         self.into_iter().collect()
     }
 }

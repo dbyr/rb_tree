@@ -57,23 +57,14 @@ impl std::fmt::Display for Colour {
 
 impl<T> Innards<T> {
     pub fn is_black(&self) -> bool {
-        match self.colour {
-            Black => true,
-            _ => false
-        }
+        matches!(self.colour, Black)
     }
     pub fn is_red(&self) -> bool {
-        match self.colour {
-            Red => true,
-            _ => false
-        }
+        matches!(self.colour, Red)
     }
 
     pub fn is_double_black(&self) -> bool {
-        match self.colour {
-            DBlack => true,
-            _ => false
-        }
+        matches!(self.colour, DBlack)
     }
 
     pub fn colour(&self) -> Colour {
@@ -139,10 +130,7 @@ impl<T> Node<T> {
         }
     }
     pub fn is_leaf(&self) -> bool {
-        match self {
-            Leaf(_) => true,
-            _ => false
-        }
+        matches!(self, Leaf(_))
     }
 
     pub fn colour(&self) -> Colour {

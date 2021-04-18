@@ -9,8 +9,8 @@ pub struct Mapper<K: PartialOrd, V> {
 impl<K: PartialOrd, V> Mapper<K, V> {
     pub fn new(key: K, val: Option<V>) -> Mapper<K, V> {
         Mapper {
-            key: key,
-            val: val
+            key,
+            val
         }
     }
 

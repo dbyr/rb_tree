@@ -64,7 +64,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// t.insert(1);
     /// 
     /// // reverse order queue
-    /// let mut q = t.to_queue(|l, r| {
+    /// let mut q = t.into_queue(|l, r| {
     ///     match l - r {
     ///         i32::MIN..=-1_i32 => Greater,
     ///         0 => Equal,
@@ -76,7 +76,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(q.pop().unwrap(), 1);
     /// assert_eq!(q.pop(), None);
     /// ```
-    pub fn to_queue<P>(self, comp: P) -> RBQueue<T, P> 
+    pub fn into_queue<P>(self, comp: P) -> RBQueue<T, P> 
     where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
         let mut queue = RBQueue::new(comp);
         for v in self {
@@ -175,11 +175,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert!(!t.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
-        if self.len() == 0 {
-            true
-        } else {
-            false
-        }
+        self.len() == 0
     }
 
     /// Inserts a new element into the RBTree.
@@ -237,7 +233,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert!(t.contains(&2));
     /// ```
     pub fn contains(&self, val: &T) -> bool {
-        !self.get(val).is_none()
+        self.get(val).is_some()
     }
 
     /// Returns the item specified if contained,
@@ -402,7 +398,7 @@ impl<T: PartialOrd> RBTree<T> {
         insert_left_down(&self.root, &mut ordered);
         Iter {
             remaining: self.len(),
-            ordered: ordered
+            ordered
         }
     }
 
@@ -572,7 +568,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert!(t3.is_subset(&t2));
     /// ```
     pub fn is_subset(&self, other: &RBTree<T>) -> bool {
-        self.intersection(other).collect::<Vec<&T>>().len() == self.len()
+        self.intersection(other).count() == self.len()
     }
 
     /// Returns true if this RBTree is a superset of another,
@@ -592,7 +588,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert!(t2.is_superset(&t3));
     /// ```
     pub fn is_superset(&self, other: &RBTree<T>) -> bool {
-        other.intersection(self).collect::<Vec<&T>>().len() == other.len()
+        other.intersection(self).count() == other.len()
     }
 
     /// Retains in this RBTree only those values for which 
@@ -613,6 +609,12 @@ impl<T: PartialOrd> RBTree<T> {
             }
         }
         std::mem::swap(&mut rep, self);
+    }
+}
+
+impl<T: PartialOrd> Default for RBTree<T> {
+    fn default() -> Self {
+        RBTree::new()
     }
 }
 
@@ -749,7 +751,7 @@ impl<'a, T: PartialOrd> Iterator for SymmetricDifference<'a, T> {
         // select and store the next next
         let mut res = None;
         'left: while let Some(vl) = self.nextl {
-            while let Some(vr) = self.nextr {
+            if let Some(vr) = self.nextr {
                 if vl < vr {
                     self.nextl = self.left.next();
                     res = Some(vl);
@@ -834,26 +836,26 @@ impl<'a, T: PartialOrd> Iterator for Union<'a, T> {
 
         // select and store the next next
         let mut res = None;
-        'left: while let Some(vl) = self.nextl {
-            while let Some(vr) = self.nextr {
+        let mut need_next = true;
+        if let Some(vl) = self.nextl {
+            if let Some(vr) = self.nextr {
                 if vl < vr {
                     self.nextl = self.left.next();
                     res = Some(vl);
-                    break 'left;
                 } else if vl == vr {
                     self.nextr = self.right.next();
                     self.nextl = self.left.next();
                     res = Some(vl);
-                    break 'left;
                 } else {
                     self.nextr = self.right.next();
                     res = Some(vr);
-                    break 'left;
                 }
+                need_next = false;
             }
-            self.nextl = self.left.next();
-            res = Some(vl);
-            break; // don't skip values
+            if need_next {
+                self.nextl = self.left.next();
+                res = Some(vl);
+            }
         }
         if res.is_none() {
             res = self.nextr;
