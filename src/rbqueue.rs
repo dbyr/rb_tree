@@ -6,44 +6,6 @@ use std::fmt::{Debug, Display, Result, Formatter};
 use crate::helpers::{write_to_level, ordered_insertion};
 use std::iter::{ExactSizeIterator, FusedIterator};
 
-/// Allows the creation of a queue using C-like
-/// comparison values. That is to say, `cmp`
-/// should return a value less than, equal to,
-/// or greater than 0 when `l` should be placed
-/// before, is equal to, or be placed after `r`
-/// respectively.
-/// 
-/// `cmp` should be a function that takes two values
-/// from the queue and returns an integer (i8)
-/// providing the information as above.
-/// 
-/// # Example:
-/// ```
-/// # #[macro_use(rbqueue_c_new)]
-/// # extern crate rb_tree;
-/// # use rb_tree::RBQueue;
-/// # fn main() {
-/// let mut q = rbqueue_c_new!(|l: &i64, r| (r - l));
-/// q.insert(1);
-/// q.insert(2);
-/// q.insert(3);
-/// assert_eq!(q.ordered(), [&3, &2, &1]);
-/// # }
-/// ```
-#[macro_export]
-macro_rules! rbqueue_c_new {
-    ($cmp:expr) => {
-        RBQueue::new(move |l, r| {
-            let comp = Box::new($cmp);
-            match comp(l, r) as i8 {
-                -128i8 ..= -1 => std::cmp::Ordering::Less,
-                0 => std::cmp::Ordering::Equal,
-                1 ..= 127i8 => std::cmp::Ordering::Greater
-            }
-        })
-    };
-}
-
 impl<T: Debug, P> Debug for RBQueue<T, P> 
 where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

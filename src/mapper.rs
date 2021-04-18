@@ -5,7 +5,6 @@ pub struct Mapper<K: PartialOrd, V> {
     val: Option<V>
 }
 
-#[allow(dead_code)]
 impl<K: PartialOrd, V> Mapper<K, V> {
     pub fn new(key: K, val: Option<V>) -> Mapper<K, V> {
         Mapper {
@@ -16,10 +15,6 @@ impl<K: PartialOrd, V> Mapper<K, V> {
 
     pub fn key(&self) -> &K {
         &self.key
-    }
-
-    pub fn is_none(&self) -> bool {
-        self.val.is_none()
     }
 
     pub fn is_some(&self) -> bool {

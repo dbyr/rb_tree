@@ -43,6 +43,50 @@ impl<K: PartialOrd, V> RBMap<K, V> {
             map: RBTree::new()
         }
     }
+
+    /// Creates an RBTree set of the keys
+    /// contained in this map.
+    /// # Example:
+    /// ```
+    /// use rb_tree::{RBMap, RBTree};
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert("Hello", "World");
+    /// map.insert("Foo", "Bar");
+    /// let kset = map.keyset();
+    /// assert!(kset.contains(&&"Hello"));
+    /// assert!(kset.contains(&&"Foo"));
+    /// assert!(!kset.contains(&&"Bar"));
+    /// ```
+    pub fn keyset(&self) -> RBTree<&K> {
+        let mut keys = RBTree::new();
+        for key in self.keys() {
+            keys.insert(key);
+        }
+        keys
+    }
+
+    /// Creates a set from the keys in this
+    /// map.
+    /// # Example:
+    /// ```
+    /// use rb_tree::{RBMap, RBTree};
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert("Hello", "World");
+    /// map.insert("Foo", "Bar");
+    /// let kset = map.into_keyset();
+    /// assert!(kset.contains(&"Hello"));
+    /// assert!(kset.contains(&"Foo"));
+    /// assert!(!kset.contains(&"Bar"));
+    /// ```
+    pub fn into_keyset(self) -> RBTree<K> {
+        let mut kset = RBTree::new();
+        for (key, _) in self.into_iter() {
+            kset.insert(key);
+        }
+        kset
+    }
     
     /// Clears all entries from the RBMap
     /// # Example:
@@ -653,6 +697,83 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     // internal helper methods
     fn ordered(&self) -> Vec<(&K, &V)> {
         self.map.iter().map(|m| (m.key(), m.as_ref())).collect()
+    }
+}
+
+impl<K: PartialOrd, V: PartialOrd> RBMap<K, V> {
+
+    /// Creates an RBTree set of the values
+    /// contained in this map.
+    /// # Example:
+    /// ```
+    /// use rb_tree::{RBMap, RBTree};
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert("Hello", "World");
+    /// map.insert("Foo", "Bar");
+    /// let vset = map.valueset();
+    /// assert!(vset.contains(&&"World"));
+    /// assert!(vset.contains(&&"Bar"));
+    /// assert!(!vset.contains(&&"Foo"));
+    /// ```
+    pub fn valueset(&self) -> RBTree<&V> {
+        let mut values = RBTree::new();
+        for value in self.values() {
+            values.insert(value);
+        }
+        values
+    }
+
+    /// Creates a set of keys and a set of values
+    /// from the given map.
+    /// 
+    /// Note: any mapping information is lost
+    /// when this operation is performed.
+    /// # Example:
+    /// ```
+    /// use rb_tree::{RBMap, RBTree};
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert("Hello", "World");
+    /// map.insert("Foo", "Bar");
+    /// let (kset, vset) = map.into_sets();
+    /// assert!(kset.contains(&"Hello"));
+    /// assert!(kset.contains(&"Foo"));
+    /// assert!(!kset.contains(&"Bar"));
+    /// assert!(vset.contains(&"World"));
+    /// assert!(vset.contains(&"Bar"));
+    /// assert!(!vset.contains(&"Foo"));
+    /// ```
+    pub fn into_sets(self) -> (RBTree<K>, RBTree<V>) {
+        let mut kset = RBTree::new();
+        let mut vset = RBTree::new();
+        for (key, value) in self.into_iter() {
+            kset.insert(key);
+            vset.insert(value);
+        }
+        (kset, vset)
+    }
+
+    /// Creates an RBTree set from the values
+    /// contained in this map.
+    /// # Example:
+    /// ```
+    /// use rb_tree::{RBMap, RBTree};
+    /// 
+    /// let mut map = RBMap::new();
+    /// map.insert("Hello", "World");
+    /// map.insert("Foo", "Bar");
+    /// let vset = map.into_valueset();
+    /// assert!(vset.contains(&"World"));
+    /// assert!(vset.contains(&"Bar"));
+    /// assert!(!vset.contains(&"Foo"));
+    /// ```
+    pub fn into_valueset(self) -> RBTree<V> {
+        let mut vset = RBTree::new();
+        for (_, value) in self.into_iter() {
+            vset.insert(value);
+        }
+        vset
     }
 }
 

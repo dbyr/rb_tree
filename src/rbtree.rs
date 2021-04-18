@@ -612,6 +612,13 @@ impl<T: PartialOrd> RBTree<T> {
     }
 }
 
+impl<T, P> From<RBQueue<T, P>> for RBTree<T>
+where T: PartialOrd, P: Copy + Fn(&T, &T) -> std::cmp::Ordering{
+    fn from(q: RBQueue<T, P>) -> Self {
+        q.into_set()
+    }
+}
+
 impl<T: PartialOrd> Default for RBTree<T> {
     fn default() -> Self {
         RBTree::new()

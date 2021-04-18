@@ -1,4 +1,4 @@
-#[macro_use(rbqueue_c_new)]
+#[macro_use(new_c_queue)]
 extern crate rb_tree;
 
 use rb_tree::RBQueue;
@@ -11,7 +11,7 @@ fn main() {
     });
 
     // compare in the reverse order
-    let mut q2 = rbqueue_c_new!(|l: &i64, r| (r - l));
+    let mut q2 = new_c_queue!(|l: &i64, r| (r - l));
 
     q1.insert(1);
     q1.insert(2);

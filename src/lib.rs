@@ -91,6 +91,70 @@ macro_rules! new_queue {
     }};
 }
 
+/// Allows the creation of a queue using C-like
+/// comparison values. That is to say, `cmp`
+/// should return a value less than, equal to,
+/// or greater than 0 when `l` should be placed
+/// before, is equal to, or be placed after `r`
+/// respectively.
+/// 
+/// `cmp` should be a function that takes two values
+/// from the queue and returns an integer (i8)
+/// providing the information as above.
+/// 
+/// # Example:
+/// ```
+/// # #[macro_use(new_c_queue)]
+/// # extern crate rb_tree;
+/// # use rb_tree::RBQueue;
+/// # fn main() {
+/// let mut q = new_c_queue!(|l: &i64, r| (r - l));
+/// q.insert(1);
+/// q.insert(2);
+/// q.insert(3);
+/// assert_eq!(q.ordered(), [&3, &2, &1]);
+/// # }
+/// ```
+/// 
+/// # Example:
+/// ```
+/// # #[macro_use(new_c_queue)]
+/// # extern crate rb_tree;
+/// # use rb_tree::RBQueue;
+/// # fn main() {
+/// let q = new_c_queue!(|l: &i64, r| (r - l); 1, 2, 3);
+/// assert_eq!(q.ordered(), [&3, &2, &1]);
+/// # }
+/// ```
+#[macro_export]
+macro_rules! new_c_queue {
+    ($cmp:expr) => {
+        RBQueue::new(move |l, r| {
+            let comp = Box::new($cmp);
+            match comp(l, r) as i8 {
+                -128i8 ..= -1 => std::cmp::Ordering::Less,
+                0 => std::cmp::Ordering::Equal,
+                1 ..= 127i8 => std::cmp::Ordering::Greater
+            }
+        })
+    };
+
+    ($cmp:expr; $($v:expr),*) => {{
+        let mut q = RBQueue::new(move |l, r| {
+            let comp = Box::new($cmp);
+            match comp(l, r) as i8 {
+                -128i8 ..= -1 => std::cmp::Ordering::Less,
+                0 => std::cmp::Ordering::Equal,
+                1 ..= 127i8 => std::cmp::Ordering::Greater
+            }
+        });
+        $(
+            q.insert($v);
+        )*
+        q
+    }};
+}
+
 /// Returns an RBMap containing the (key, value)
 /// pairs separated by commas.
 /// # Example:

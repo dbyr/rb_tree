@@ -1,4 +1,4 @@
-#[macro_use(rbqueue_c_new)]
+#[macro_use(new_c_queue)]
 extern crate rb_tree;
 
 use rb_tree::RBQueue;
@@ -11,7 +11,7 @@ fn main() {
     
     // orders values by their distance from the origin
     // or absolute size of x value on equal distance
-    let mut q = rbqueue_c_new!(|l: &(f64, f64), r| {
+    let mut q = new_c_queue!(|l: &(f64, f64), r| {
         let l_dist = from_origin(l);
         let r_dist = from_origin(r);
         if l_dist == r_dist {
