@@ -798,6 +798,33 @@ impl<K: PartialOrd, V> Iterator for IntoIter<K, V> {
     }
 }
 
+/// Provides the trait ExactSizeIterator for IntoIter<K, V>
+/// # Example:
+/// ```
+/// use rb_tree::RBMap;
+/// use std::iter::FusedIterator;
+///
+/// let mut map = RBMap::new();
+///
+/// map.insert(5, "Is");
+/// map.insert(2, "This");
+/// map.insert(7, "The");
+/// map.insert(6, "Real");
+/// map.insert(6, "World");
+///
+/// let mut iterator = map.into_iter();
+/// assert_eq!(iterator.len(), 4);
+/// let _ = iterator.next();
+/// assert_eq!(iterator.len(), 3);
+/// ```
+impl<K: PartialOrd, V> ExactSizeIterator for IntoIter<K, V>  {
+    fn len(&self) -> usize {
+        self.tree.len()
+    }
+}
+
+impl<K: PartialOrd, V> FusedIterator for IntoIter<K, V> {}
+
 impl<K: PartialOrd, V> IntoIterator for RBMap<K, V> {
     type Item = (K, V);
     type IntoIter = IntoIter<K, V>;

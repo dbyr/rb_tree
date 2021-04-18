@@ -458,6 +458,29 @@ impl<T> Iterator for IntoIter<T> {
     }
 }
 
+/// Provides the trait ExactSizeIterator for IntoIter<T>
+/// # Example:
+/// ```
+/// use rb_tree::RBQueue;
+///
+/// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
+/// t.insert(2);
+/// t.insert(1);
+/// t.insert(3);
+///
+/// let mut iterator = t.into_iter();
+/// assert_eq!(iterator.len(), 3);
+/// let _ = iterator.next();
+/// assert_eq!(iterator.len(), 2);
+/// ```
+impl<T> ExactSizeIterator for IntoIter<T>  {
+    fn len(&self) -> usize {
+        self.order.len()
+    }
+}
+
+impl<T> FusedIterator for IntoIter<T> {}
+
 impl<T, P> IntoIterator for RBQueue<T, P>
 where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     type Item = T;

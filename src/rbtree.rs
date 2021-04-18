@@ -637,6 +637,29 @@ impl<T: PartialOrd> Iterator for IntoIter<T> {
     }
 }
 
+/// Provides the trait ExactSizeIterator for IntoIter<T>
+/// # Example:
+/// ```
+/// use rb_tree::RBTree;
+///
+/// let mut t = RBTree::new();
+/// t.insert(3);
+/// t.insert(1);
+/// t.insert(5);
+///
+/// let mut iterator = t.into_iter();
+/// assert_eq!(iterator.len(), 3);
+/// let _ = iterator.next();
+/// assert_eq!(iterator.len(), 2);
+/// ```
+impl<T: PartialOrd> ExactSizeIterator for IntoIter<T>  {
+    fn len(&self) -> usize {
+        self.tree.len()
+    }
+}
+
+impl<T: PartialOrd> FusedIterator for IntoIter<T> {}
+
 impl<T: PartialOrd> IntoIterator for RBTree<T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
