@@ -681,6 +681,22 @@ impl<T: PartialOrd> FromIterator<T> for RBTree<T> {
     }
 }
 
+impl<T: PartialOrd> Extend<T> for RBTree<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        for i in iter {
+            self.insert(i);
+        }
+    }
+}
+
+impl<'a, T: PartialOrd + Copy + 'a> Extend<&'a T> for RBTree<T> {
+    fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
+        for &i in iter {
+            self.insert(i);
+        }
+    }
+}
+
 pub struct Drain<T: PartialOrd> {
     tree: RBTree<T>
 }

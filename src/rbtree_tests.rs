@@ -962,14 +962,31 @@ fn test_iterator() {
     t.insert(34);
     t.insert(1);
 
-    let expected = [
-        0, 1, 2, 4,
-        5, 7, 13, 14,
-        15, 21, 23, 26,
-        34, 37, 41
-    ];
+    let expected = [0, 1, 2, 4, 5, 7, 13, 14, 15, 21, 23, 26, 34, 37, 41];
+    let mut len = 0;
 
-    for (i, v) in t.iter().enumerate() {
-        assert_eq!(v, &expected[i]);
+    for (expected, v) in t.iter().zip(&expected) {
+        assert_eq!(v, expected);
+        len += 1;
     }
+
+    assert_eq!(len, expected.len());
+}
+
+#[test]
+fn test_extend() {
+    let mut t = RBTree::new();
+    t.extend(vec![90, 120, 12]);
+    t.extend(std::iter::once(34).chain((809..=811).rev()));
+    t.extend(5..8);
+
+    let expected = [5, 6, 7, 12, 34, 90, 120, 809, 810, 811];
+    let mut len = 0;
+
+    for (expected, v) in t.iter().zip(&expected) {
+        assert_eq!(v, expected);
+        len += 1;
+    }
+
+    assert_eq!(len, expected.len());
 }
