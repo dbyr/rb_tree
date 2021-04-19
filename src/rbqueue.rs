@@ -1,6 +1,6 @@
+use crate::RBQueue;
 #[cfg(feature = "set")]
 use crate::RBTree;
-use crate::RBQueue;
 
 use crate::helpers::{ordered_insertion, write_to_level};
 use crate::node::Colour::Black;
