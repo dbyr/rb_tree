@@ -1,17 +1,24 @@
 # rb_tree
-This crate contains an implementation of the Red Black tree data structure and several data structures that are built on top of this implementation. The data structures currently include RBTree, RBMap, and RBQueue
+
+This crate contains an implementation of the red-black tree data structure and several data structures that are built on top of this implementation. The data structures currently include RBTree, RBMap, and RBQueue.
+
+## Data Structures
 
 ### RBTree
+
 This data structure can be used as a set and has methods to support its use as a set. Methods specific to this data structure include set operations such as union, difference etc. Values are stored in their `PartialOrd` ordering.
 
 ### RBMap
+
 This data structure provides an interface for using the RBTree as a map. Values in the map are ordered by their keys' `PartialOrd` ordering.
 
 ### RBQueue
-This data structure allows the use of the underlying Red-Black tree as a priority queue. A comparison function is provided on instantiation (either with `RBQueue::new(Fn(&T, &T) -> std::cmp::Ordering)` or `rbqueue_c_new!(Fn(&T, &T) -> i8)`) which is used to order the entries.
 
-Examples:
-```
+This data structure allows the use of the underlying red-black tree as a priority queue. A comparison function is provided on instantiation (either with `RBQueue::new(Fn(&T, &T) -> std::cmp::Ordering)` or `rbqueue_c_new!(Fn(&T, &T) -> i8)`) which is used to order the entries.
+
+## Examples
+
+```rust
 use rb_tree::RBTree;
 
 // uses an rbtree to sort data
@@ -36,7 +43,7 @@ fn main() {
 }
 ```
 
-```
+```rust
 use rb_tree::RBMap;
 
 fn main() {
@@ -53,7 +60,7 @@ fn main() {
 }
 ```
 
-```
+```rust
 #[macro_use(rbqueue_c_new)]
 extern crate rb_tree;
 
