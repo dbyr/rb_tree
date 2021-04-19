@@ -1,4 +1,6 @@
-use crate::{RBQueue, RBTree};
+#[cfg(feature = "set")]
+use crate::RBTree;
+use crate::RBQueue;
 
 use crate::helpers::{ordered_insertion, write_to_level};
 use crate::node::Colour::Black;
@@ -446,6 +448,7 @@ where
     /// assert_eq!(t.pop().unwrap(), 3);
     /// assert_eq!(t.pop(), None);
     /// ```
+    #[cfg(feature = "set")]
     pub fn into_set(self) -> RBTree<T> {
         self.into_iter().collect()
     }

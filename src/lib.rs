@@ -1,20 +1,26 @@
 mod node;
+#[cfg(feature = "map")]
 pub mod rbmap;
+#[cfg(feature = "set")]
 pub mod rbtree;
 #[macro_use]
+#[cfg(feature = "queue")]
 pub mod rbqueue;
 mod helpers;
+#[cfg(feature = "map")]
 mod mapper;
 #[cfg(test)]
 mod rbtree_tests;
 #[cfg(test)]
 mod stress_test;
 
+#[cfg(feature = "map")]
 use mapper::Mapper;
 use node::Node;
 
 /// A map implemented using a red black tree to
 /// store key-value pairs.
+#[cfg(feature = "map")]
 #[derive(Clone)]
 pub struct RBMap<K: PartialOrd, V> {
     map: RBTree<Mapper<K, V>>,
@@ -23,6 +29,7 @@ pub struct RBMap<K: PartialOrd, V> {
 /// A red black tree that can be used to store
 /// elements sorted by their PartialOrd provided
 /// ordering.
+#[cfg(feature = "set")]
 #[derive(Clone)]
 pub struct RBTree<T: PartialOrd> {
     root: Node<T>,
@@ -33,6 +40,7 @@ pub struct RBTree<T: PartialOrd> {
 /// tree. The ordering supplied must satisfy the assymetry
 /// and transitivity rules as outlined by  the dorumentation
 /// of std::cmp::PartialOrd.
+#[cfg(feature = "queue")]
 #[derive(Clone)]
 pub struct RBQueue<T, P>
 where
@@ -57,6 +65,7 @@ where
 /// assert_eq!(in_both.next().unwrap(), &'d');
 /// assert_eq!(in_both.next(), None);
 /// ```
+#[cfg(feature = "set")]
 #[macro_export]
 macro_rules! new_set {
     ( $($v:expr),* ) => {{
@@ -87,6 +96,7 @@ macro_rules! new_set {
 /// assert_eq!(q.pop().unwrap(), 1);
 /// assert_eq!(q.pop(), None);
 /// ```
+#[cfg(feature = "queue")]
 #[macro_export]
 macro_rules! new_queue {
     ($comp:expr; $($v:expr),*) => {{
@@ -131,6 +141,7 @@ macro_rules! new_queue {
 /// assert_eq!(q.ordered(), [&3, &2, &1]);
 /// # }
 /// ```
+#[cfg(feature = "queue")]
 #[macro_export]
 macro_rules! new_c_queue {
     ($cmp:expr) => {
@@ -171,6 +182,7 @@ macro_rules! new_c_queue {
 /// assert_eq!(m.get(&2).unwrap(), &'b');
 /// assert_eq!(m.get(&3).unwrap(), &'c');
 /// ```
+#[cfg(feature = "map")]
 #[macro_export]
 macro_rules! new_map {
     ( $(($k:expr, $v:expr)),* ) => {{

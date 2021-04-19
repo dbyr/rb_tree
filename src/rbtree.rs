@@ -2,7 +2,9 @@ use crate::helpers::{insert_left_down, ordered_insertion, write_to_level};
 use crate::node::Colour::Black;
 use crate::node::Node;
 use crate::node::Node::Leaf;
-use crate::{RBQueue, RBTree};
+#[cfg(feature = "queue")]
+use crate::RBQueue;
+use crate::RBTree;
 
 use std::fmt::{Debug, Display, Formatter, Result};
 use std::iter::{ExactSizeIterator, FromIterator, FusedIterator};
@@ -75,6 +77,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(q.pop().unwrap(), 1);
     /// assert_eq!(q.pop(), None);
     /// ```
+    #[cfg(feature = "queue")]
     pub fn into_queue<P>(self, comp: P) -> RBQueue<T, P>
     where
         P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
@@ -252,6 +255,7 @@ impl<T: PartialOrd> RBTree<T> {
         self.root.get(val, &partial_ord)
     }
 
+    #[cfg(feature = "map")]
     pub(crate) fn get_mut<K: PartialOrd<T>>(&mut self, val: &K) -> Option<&mut T> {
         self.root.get_mut(val, &partial_ord)
     }
@@ -601,6 +605,7 @@ impl<T: PartialOrd> RBTree<T> {
     }
 }
 
+#[cfg(feature = "queue")]
 impl<T, P> From<RBQueue<T, P>> for RBTree<T>
 where
     T: PartialOrd,

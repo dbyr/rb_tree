@@ -16,6 +16,19 @@ This data structure provides an interface for using the RBTree as a map. Values 
 
 This data structure allows the use of the underlying red-black tree as a priority queue. A comparison function is provided on instantiation (either with `RBQueue::new(Fn(&T, &T) -> std::cmp::Ordering)` or `new_c_queue!(Fn(&T, &T) -> i8)`) which is used to order the entries.
 
+## Features
+
+The above data structures can be optionally excluded (all are included by default). If you are only using one or two of the types you can exclude the other(s) to help minimise your binary size. However, because `RBMap` is a wrapper type for `RBTree` including the former will always include the latter. To do this, add to your dependencies:
+
+```toml
+[dependencies]
+rb_tree = { version = "*", default-features = false, features = ["map" | "set" | "queue"]}
+```
+
+This will add to your binary the `RBMap`, `RBTree`, and `RBQueue` types respectively. It is important you set `default-features` to false as all features are enabled by default.
+
+See [here](https://doc.rust-lang.org/cargo/reference/features.html) for more info about cargo's feature system.
+
 ## Examples
 
 ```rust

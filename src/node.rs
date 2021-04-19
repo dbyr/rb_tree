@@ -144,6 +144,7 @@ impl<T> Node<T> {
         }
     }
 
+    #[cfg(feature = "map")]
     pub fn value_mut(&mut self) -> Option<&mut T> {
         match self {
             Internal(n) => Some(&mut n.value),
@@ -603,6 +604,7 @@ impl<T> Node<T> {
         }
     }
 
+    #[cfg(feature = "map")]
     pub fn get_mut<K, P>(&mut self, val: &K, cmp: &P) -> Option<&mut T>
     where
         P: Fn(&K, &T) -> std::cmp::Ordering,
