@@ -27,6 +27,7 @@ enum Removal<T> {
 }
 
 // makes matches nicer
+#[derive(Clone)]
 pub struct Innards<T> {
     value: T,
     colour: Colour,
@@ -34,6 +35,7 @@ pub struct Innards<T> {
     l_child: Box<Node<T>>,
 }
 
+#[derive(Clone)]
 // represents a node in the rb_tree
 pub enum Node<T> {
     Internal(Innards<T>),
