@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Formatter, Result};
 
+#[derive(Clone)]
 pub struct Mapper<K: PartialOrd, V> {
     key: K,
     val: Option<V>

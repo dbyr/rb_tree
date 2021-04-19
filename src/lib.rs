@@ -15,6 +15,7 @@ use mapper::Mapper;
 
 /// A map implemented using a red black tree to
 /// store key-value pairs.
+#[derive(Clone)]
 pub struct RBMap<K: PartialOrd, V> {
     map: RBTree<Mapper<K, V>>
 }
@@ -22,6 +23,7 @@ pub struct RBMap<K: PartialOrd, V> {
 /// A red black tree that can be used to store
 /// elements sorted by their PartialOrd provided
 /// ordering.
+#[derive(Clone)]
 pub struct RBTree<T: PartialOrd> {
     root: Node<T>,
     contained: usize
@@ -31,7 +33,8 @@ pub struct RBTree<T: PartialOrd> {
 /// tree. The ordering supplied must satisfy the assymetry
 /// and transitivity rules as outlined by  the dorumentation
 /// of std::cmp::PartialOrd.
-pub struct RBQueue<T, P> 
+#[derive(Clone)]
+pub struct RBQueue<T, P>
 where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     root: Node<T>,
     contained: usize,
