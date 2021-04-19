@@ -9,7 +9,7 @@ fn main() {
     assert_eq!(t.remove(&"World").unwrap(), 1);
 
     t.insert("Blah", 2);
-    
+
     for (_, v) in t.iter_mut() {
         println!("{:?}", v);
         *v = 6;

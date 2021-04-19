@@ -1,13 +1,15 @@
 use crate::{RBQueue, RBTree};
 
+use crate::helpers::{ordered_insertion, write_to_level};
 use crate::node::Colour::Black;
 use crate::node::Node::Leaf;
-use std::fmt::{Debug, Display, Result, Formatter};
-use crate::helpers::{write_to_level, ordered_insertion};
+use std::fmt::{Debug, Display, Formatter, Result};
 use std::iter::{ExactSizeIterator, FusedIterator};
 
-impl<T: Debug, P> Debug for RBQueue<T, P> 
-where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
+impl<T: Debug, P> Debug for RBQueue<T, P>
+where
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let mut levels = Vec::new();
         write_to_level(&self.root, "".to_string(), 0, &mut levels);
@@ -23,18 +25,21 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
 }
 
 impl<T: Debug, P> Display for RBQueue<T, P>
-where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
+where
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{:?}", self.ordered())
     }
 }
 
 impl<T, P> RBQueue<T, P>
-where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
-
+where
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+{
     /// Creates and returns a new RBQueue that
     /// will order entries based on cmp.
-    /// 
+    ///
     /// It is a logic error to use a closure
     /// where two non-identical items map to the
     /// same value. If `cmp` returns Equal, then
@@ -42,7 +47,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<(i8, i8), _>::new(|l, r| {
     ///     let l_sum = l.0 + l.1;
     ///     let r_sum = r.0 + r.1;
@@ -60,7 +65,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     ///         std::cmp::Ordering::Greater
     ///     }
     /// });
-    /// 
+    ///
     /// t.insert((1, 1));
     /// t.insert((1, 2));
     /// t.insert((1, -1));
@@ -70,7 +75,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
         RBQueue {
             root: Leaf(Black),
             contained: 0,
-            cmp
+            cmp,
         }
     }
 
@@ -78,7 +83,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut q = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// q.insert(2);
     /// q.insert(5);
@@ -96,7 +101,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut q = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// q.insert(2);
     /// q.insert(5);
@@ -112,9 +117,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
         while let Some(v) = self.pop_back() {
             vec.push(v);
         }
-        Drain {
-            ordered: vec
-        }
+        Drain { ordered: vec }
     }
 
     /// Returns a vector presenting the contained
@@ -124,7 +127,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(3);
     /// t.insert(1);
@@ -143,7 +146,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(3);
     /// t.insert(1);
@@ -161,7 +164,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// assert!(t.is_empty());
     /// t.insert(3);
@@ -177,7 +180,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<String, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// assert_eq!(t.insert("Hello".to_string()), true);
     /// assert_eq!(t.insert("Hello".to_string()), false);
@@ -199,7 +202,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<String, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// assert_eq!(t.replace("Hello".to_string()), None);
     /// assert_eq!(t.replace("Hello".to_string()), Some("Hello".to_string()));
@@ -219,7 +222,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(2);
     /// assert!(!t.contains(&3));
@@ -234,7 +237,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(1);
     /// assert_eq!(*t.get(&1).unwrap(), 1);
@@ -253,7 +256,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(4);
     /// t.insert(2);
@@ -266,8 +269,8 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
             Some(v) => {
                 self.contained -= 1;
                 Some(v)
-            },
-            None => None
+            }
+            None => None,
         }
     }
 
@@ -276,7 +279,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(4);
     /// t.insert(2);
@@ -289,8 +292,8 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
             Some(_) => {
                 self.contained -= 1;
                 true
-            },
-            None => false
+            }
+            None => false,
         }
     }
 
@@ -300,7 +303,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(2);
     /// t.insert(1);
@@ -312,8 +315,8 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
             Some(v) => {
                 self.contained -= 1;
                 Some(v)
-            },
-            None => None
+            }
+            None => None,
         }
     }
 
@@ -323,7 +326,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(2);
     /// t.insert(1);
@@ -340,7 +343,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(2);
     /// t.insert(1);
@@ -352,8 +355,8 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
             Some(v) => {
                 self.contained -= 1;
                 Some(v)
-            },
-            None => None
+            }
+            None => None,
         }
     }
 
@@ -363,7 +366,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(2);
     /// t.insert(1);
@@ -379,7 +382,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<i8, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// t.insert(3);
     /// t.insert(1);
@@ -389,16 +392,16 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     pub fn iter(&self) -> Iter<T> {
         Iter {
             pos: 0,
-            ordered: self.ordered()
+            ordered: self.ordered(),
         }
     }
 
-    /// Retains in this RBQueue only those values for which 
+    /// Retains in this RBQueue only those values for which
     /// the passed closure returns true.
     /// # Example:
     /// ```
     /// use rb_tree::RBQueue;
-    /// 
+    ///
     /// let mut t = RBQueue::<usize, _>::new(|l, r| l.partial_cmp(r).unwrap());
     /// for i in 0usize..10usize { t.insert(i); }
     /// t.retain(|v| v % 2 == 0);
@@ -416,14 +419,16 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
 }
 
 impl<T, P> RBQueue<T, P>
-where T: PartialOrd, P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
-
+where
+    T: PartialOrd,
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+{
     /// Turns this queue into a set (RBTree)
-    /// # Example: 
+    /// # Example:
     /// ```
     /// use rb_tree::{RBQueue, RBTree};
     /// use std::cmp::Ordering::{Equal, Less, Greater};
-    /// 
+    ///
     /// let mut q = RBQueue::new(|l, r| {
     ///     match l - r {
     ///         i32::MIN..=-1_i32 => Greater,
@@ -434,7 +439,7 @@ where T: PartialOrd, P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     /// q.insert(1);
     /// q.insert(2);
     /// q.insert(3);
-    /// 
+    ///
     /// let mut t = q.into_set();
     /// assert_eq!(t.pop().unwrap(), 1);
     /// assert_eq!(t.pop().unwrap(), 2);
@@ -447,7 +452,7 @@ where T: PartialOrd, P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
 }
 
 pub struct IntoIter<T> {
-    order: Vec<T>
+    order: Vec<T>,
 }
 
 impl<T> Iterator for IntoIter<T> {
@@ -473,7 +478,7 @@ impl<T> Iterator for IntoIter<T> {
 /// let _ = iterator.next();
 /// assert_eq!(iterator.len(), 2);
 /// ```
-impl<T> ExactSizeIterator for IntoIter<T>  {
+impl<T> ExactSizeIterator for IntoIter<T> {
     fn len(&self) -> usize {
         self.order.len()
     }
@@ -482,7 +487,9 @@ impl<T> ExactSizeIterator for IntoIter<T>  {
 impl<T> FusedIterator for IntoIter<T> {}
 
 impl<T, P> IntoIterator for RBQueue<T, P>
-where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
+where
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+{
     type Item = T;
     type IntoIter = IntoIter<T>;
 
@@ -491,14 +498,35 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
         while let Some(v) = self.pop_back() {
             vec.push(v);
         }
-        IntoIter {
-            order: vec
+        IntoIter { order: vec }
+    }
+}
+
+impl<T, P> Extend<T> for RBQueue<T, P>
+where
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+{
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        for i in iter {
+            self.insert(i);
+        }
+    }
+}
+
+impl<'a, T, P> Extend<&'a T> for RBQueue<T, P>
+where
+    T: Copy + 'a,
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+{
+    fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
+        for &i in iter {
+            self.insert(i);
         }
     }
 }
 
 pub struct Drain<T> {
-    ordered: Vec<T>
+    ordered: Vec<T>,
 }
 
 impl<T> Iterator for Drain<T> {
@@ -519,7 +547,7 @@ impl<T> FusedIterator for Drain<T> {}
 
 pub struct Iter<'a, T> {
     pos: usize,
-    ordered: Vec<&'a T>
+    ordered: Vec<&'a T>,
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -531,8 +559,8 @@ impl<'a, T> Iterator for Iter<'a, T> {
             Some(v) => {
                 self.pos += 1;
                 Some(*v)
-            },
-            None => None
+            }
+            None => None,
         }
     }
 }

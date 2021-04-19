@@ -1,6 +1,6 @@
 mod node;
-pub mod rbtree;
 pub mod rbmap;
+pub mod rbtree;
 #[macro_use]
 pub mod rbqueue;
 mod helpers;
@@ -10,14 +10,14 @@ mod rbtree_tests;
 #[cfg(test)]
 mod stress_test;
 
-use node::Node;
 use mapper::Mapper;
+use node::Node;
 
 /// A map implemented using a red black tree to
 /// store key-value pairs.
 #[derive(Clone)]
 pub struct RBMap<K: PartialOrd, V> {
-    map: RBTree<Mapper<K, V>>
+    map: RBTree<Mapper<K, V>>,
 }
 
 /// A red black tree that can be used to store
@@ -26,7 +26,7 @@ pub struct RBMap<K: PartialOrd, V> {
 #[derive(Clone)]
 pub struct RBTree<T: PartialOrd> {
     root: Node<T>,
-    contained: usize
+    contained: usize,
 }
 
 /// A priority queue implemented using a red black
@@ -35,10 +35,12 @@ pub struct RBTree<T: PartialOrd> {
 /// of std::cmp::PartialOrd.
 #[derive(Clone)]
 pub struct RBQueue<T, P>
-where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
+where
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering
+{
     root: Node<T>,
     contained: usize,
-    cmp: P
+    cmp: P,
 }
 
 /// Returns an RBTree containing the items
@@ -46,7 +48,7 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
 /// # Example:
 /// ```
 /// use rb_tree::{RBTree, new_set};
-/// 
+///
 /// let t1 = new_set!('b', 'a', 'd', 'c');
 /// let t2 = new_set!('d', 'f', 'e', 'c');
 ///
@@ -71,7 +73,7 @@ macro_rules! new_set {
 /// elements following it.
 /// # Example:
 /// use rb_tree::{RBQueue, new_queue};
-/// 
+///
 /// let mut q = new_queue!(|l, r| {
 /// match l - r {
 ///     i32::MIN..=-1_i32 => Greater,
@@ -100,11 +102,11 @@ macro_rules! new_queue {
 /// or greater than 0 when `l` should be placed
 /// before, is equal to, or be placed after `r`
 /// respectively.
-/// 
+///
 /// `cmp` should be a function that takes two values
 /// from the queue and returns an integer (i8)
 /// providing the information as above.
-/// 
+///
 /// # Example:
 /// ```
 /// # #[macro_use(new_c_queue)]
@@ -118,7 +120,7 @@ macro_rules! new_queue {
 /// assert_eq!(q.ordered(), [&3, &2, &1]);
 /// # }
 /// ```
-/// 
+///
 /// # Example:
 /// ```
 /// # #[macro_use(new_c_queue)]
@@ -163,7 +165,7 @@ macro_rules! new_c_queue {
 /// # Example:
 /// ```
 /// use rb_tree::{RBMap, new_map};
-/// 
+///
 /// let m = new_map!((1, 'a'), (2, 'b'), (3, 'c'));
 /// assert_eq!(m.get(&1).unwrap(), &'a');
 /// assert_eq!(m.get(&2).unwrap(), &'b');

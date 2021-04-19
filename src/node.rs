@@ -1,13 +1,13 @@
 use std::boxed::Box;
-use std::ops::{DerefMut, Deref};
-use std::mem::swap as m_swap;
 use std::cmp::Ordering::{Equal, Greater, Less};
+use std::mem::swap as m_swap;
+use std::ops::{Deref, DerefMut};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Colour {
     Red,
     Black,
-    DBlack
+    DBlack,
 }
 
 enum Insertion<T> {
@@ -16,14 +16,14 @@ enum Insertion<T> {
     Recoloured,
     Inserted,
     Replaced(T),
-    Success
+    Success,
 }
 
 enum Removal<T> {
     Removed(T),
     Doubled(T),
     Match,
-    NotFound
+    NotFound,
 }
 
 // makes matches nicer
@@ -32,19 +32,19 @@ pub struct Innards<T> {
     value: T,
     colour: Colour,
     r_child: Box<Node<T>>,
-    l_child: Box<Node<T>>
+    l_child: Box<Node<T>>,
 }
 
 #[derive(Clone)]
 // represents a node in the rb_tree
 pub enum Node<T> {
     Internal(Innards<T>),
-    Leaf(Colour)
+    Leaf(Colour),
 }
 
-use Node::*;
 use Colour::*;
 use Insertion::*;
+use Node::*;
 use Removal::*;
 
 impl std::fmt::Display for Colour {
@@ -52,7 +52,7 @@ impl std::fmt::Display for Colour {
         match self {
             Red => write!(f, "R"),
             Black => write!(f, "B"),
-            DBlack => write!(f, "D")
+            DBlack => write!(f, "D"),
         }
     }
 }
@@ -81,54 +81,49 @@ impl<T> Innards<T> {
         self.colour = match self.colour {
             Red => Black,
             Black => Red,
-            DBlack => Black
+            DBlack => Black,
         }
     }
 }
 
 impl<T> Node<T> {
-
     pub fn new(val: T) -> Node<T> {
-        Internal(
-            Innards{
-                value: val,
-                colour: Red, // all newly inserted values are red
-                r_child: Box::new(Leaf(Black)),
-                l_child: Box::new(Leaf(Black))
-            }
-        )
+        Internal(Innards {
+            value: val,
+            colour: Red, // all newly inserted values are red
+            r_child: Box::new(Leaf(Black)),
+            l_child: Box::new(Leaf(Black)),
+        })
     }
 
     // method used for testing
     #[cfg(test)]
     pub fn new_black(val: T) -> Node<T> {
-        Internal(
-            Innards{
-                value: val,
-                colour: Black, // all newly inserted values are red
-                r_child: Box::new(Leaf(Black)),
-                l_child: Box::new(Leaf(Black))
-            }
-        )
+        Internal(Innards {
+            value: val,
+            colour: Black, // all newly inserted values are red
+            r_child: Box::new(Leaf(Black)),
+            l_child: Box::new(Leaf(Black)),
+        })
     }
 
     // convenience functions so matches don't appear everywhere
     pub fn is_black(&self) -> bool {
         match self {
             Internal(n) => n.is_black(),
-            Leaf(c) => *c == Black
+            Leaf(c) => *c == Black,
         }
     }
     pub fn is_red(&self) -> bool {
         match self {
             Internal(n) => n.is_red(),
-            _ => false
+            _ => false,
         }
     }
     pub fn is_double_black(&self) -> bool {
         match self {
             Internal(n) => n.is_double_black(),
-            Leaf(c) => *c == DBlack
+            Leaf(c) => *c == DBlack,
         }
     }
     pub fn is_leaf(&self) -> bool {
@@ -138,21 +133,21 @@ impl<T> Node<T> {
     pub fn colour(&self) -> Colour {
         match self {
             Internal(n) => n.colour,
-            Leaf(c) => *c
+            Leaf(c) => *c,
         }
     }
 
     pub fn value(&self) -> Option<&T> {
         match self {
             Internal(n) => Some(&n.value),
-            Leaf(_) => None
+            Leaf(_) => None,
         }
     }
 
     pub fn value_mut(&mut self) -> Option<&mut T> {
         match self {
             Internal(n) => Some(&mut n.value),
-            Leaf(_) => None
+            Leaf(_) => None,
         }
     }
 
@@ -164,47 +159,47 @@ impl<T> Node<T> {
     fn black(&mut self) {
         match self {
             Internal(n) => n.colour = Black,
-            Leaf(c) => *c = Black
+            Leaf(c) => *c = Black,
         }
     }
     fn red(&mut self) {
         match self {
             Internal(n) => n.colour = Red,
-            Leaf(c) => *c = Red
+            Leaf(c) => *c = Red,
         }
     }
     fn double_black(&mut self) {
         match self {
             Internal(n) => n.colour = DBlack,
-            Leaf(c) => *c = DBlack
+            Leaf(c) => *c = DBlack,
         }
     }
 
     pub fn get_left(&self) -> &Node<T> {
         match self {
             Internal(n) => &n.l_child,
-            Leaf(_) => self
+            Leaf(_) => self,
         }
     }
 
     pub fn get_right(&self) -> &Node<T> {
         match self {
             Internal(n) => &n.r_child,
-            Leaf(_) => self
+            Leaf(_) => self,
         }
     }
 
     pub fn get_left_mut(&mut self) -> &mut Node<T> {
         match self {
             Internal(n) => &mut n.l_child,
-            Leaf(_) => self
+            Leaf(_) => self,
         }
     }
 
     pub fn get_right_mut(&mut self) -> &mut Node<T> {
         match self {
             Internal(n) => &mut n.r_child,
-            Leaf(_) => self
+            Leaf(_) => self,
         }
     }
 
@@ -215,45 +210,51 @@ impl<T> Node<T> {
     fn innards(&mut self) -> &mut Innards<T> {
         match self {
             Internal(n) => n,
-            Leaf(_) => panic!("Attempted to extract details of leaf node")
+            Leaf(_) => panic!("Attempted to extract details of leaf node"),
         }
     }
     fn gut(self) -> Innards<T> {
         match self {
             Internal(n) => n,
-            Leaf(_) => panic!("Attempted to extract details of leaf node")
+            Leaf(_) => panic!("Attempted to extract details of leaf node"),
         }
     }
 
     // true gets the right child, false left
     fn child(&mut self, right: bool) -> &mut Node<T> {
         match self {
-            Internal(n) => if right {
-                n.r_child.deref_mut()
-            } else {
-                n.l_child.deref_mut()
-            },
-            Leaf(_) => panic!("Attempted to get child of leaf")
+            Internal(n) => {
+                if right {
+                    n.r_child.deref_mut()
+                } else {
+                    n.l_child.deref_mut()
+                }
+            }
+            Leaf(_) => panic!("Attempted to get child of leaf"),
         }
     }
     fn peek_child(&self, right: bool) -> &Node<T> {
         match self {
-            Internal(n) => if right {
-                n.r_child.deref()
-            } else {
-                n.l_child.deref()
-            },
-            Leaf(_) => panic!("Attempted to get child of leaf")
+            Internal(n) => {
+                if right {
+                    n.r_child.deref()
+                } else {
+                    n.l_child.deref()
+                }
+            }
+            Leaf(_) => panic!("Attempted to get child of leaf"),
         }
     }
     fn child_safe(&mut self, right: bool) -> &mut Node<T> {
         match self {
-            Internal(n) => if right {
-                n.r_child.deref_mut()
-            } else {
-                n.l_child.deref_mut()
-            },
-            Leaf(_) => self
+            Internal(n) => {
+                if right {
+                    n.r_child.deref_mut()
+                } else {
+                    n.l_child.deref_mut()
+                }
+            }
+            Leaf(_) => self,
         }
     }
 
@@ -300,28 +301,20 @@ impl<T> Node<T> {
     }
 
     // reorders nodes when required upon insertion
-    fn insert_switcheroo(
-        &mut self,
-        right: bool,
-        inner: bool,
-        recolour: bool
-    ) -> Insertion<T> {
+    fn insert_switcheroo(&mut self, right: bool, inner: bool, recolour: bool) -> Insertion<T> {
         if recolour {
-
             // doesn't move anything, simply recolours
             self.swap_colour();
             self.child(false).swap_colour();
             self.child(true).swap_colour();
             Recoloured
         } else if inner {
-
             // realligns the newly inserted value as the new local root
             self.inner_switcheroo(right);
             self.swap_colour();
             self.child(!right).swap_colour();
             Success
         } else {
-
             // realigns the parent of the newly inserted value as the new
             // local root
             self.outer_switcheroo(right);
@@ -333,7 +326,9 @@ impl<T> Node<T> {
 
     // returns the value if the value was not inserted
     fn insert_op<P>(&mut self, mut new_v: T, cmp: &P) -> Insertion<T>
-    where P: Fn(&T, &T) -> std::cmp::Ordering {
+    where
+        P: Fn(&T, &T) -> std::cmp::Ordering,
+    {
         match self {
             Internal(n) => {
                 let order = cmp(&n.value, &new_v);
@@ -341,21 +336,13 @@ impl<T> Node<T> {
                     Equal => {
                         m_swap(&mut n.value, &mut new_v); // useful if used like a map
                         (Replaced(new_v), true, true)
-                    },
-                    Greater => {
-                        (n.l_child.insert_op(new_v, cmp), false, n.r_child.is_red())
-                    },
-                    Less => {
-                        (n.r_child.insert_op(new_v, cmp), true, n.l_child.is_red())
                     }
+                    Greater => (n.l_child.insert_op(new_v, cmp), false, n.r_child.is_red()),
+                    Less => (n.r_child.insert_op(new_v, cmp), true, n.l_child.is_red()),
                 };
                 match res {
-                    InvalidLeft => {
-                        self.insert_switcheroo(right, right, recolour)
-                    },
-                    InvalidRight => {
-                        self.insert_switcheroo(right, !right, recolour)
-                    },
+                    InvalidLeft => self.insert_switcheroo(right, right, recolour),
+                    InvalidRight => self.insert_switcheroo(right, !right, recolour),
                     Recoloured => {
                         if self.is_red() && self.child(right).is_red() {
                             if right {
@@ -366,7 +353,7 @@ impl<T> Node<T> {
                         } else {
                             Success
                         }
-                    },
+                    }
                     Inserted => {
                         if self.is_black() {
                             Success
@@ -375,11 +362,11 @@ impl<T> Node<T> {
                         } else {
                             InvalidLeft
                         }
-                    },
+                    }
                     Replaced(v) => Replaced(v),
-                    Success => Success
+                    Success => Success,
                 }
-            },
+            }
             Leaf(_) => {
                 *self = Node::new(new_v);
                 Inserted
@@ -389,14 +376,16 @@ impl<T> Node<T> {
 
     // only to be called on the root
     pub fn insert<P>(&mut self, new_v: T, cmp: &P) -> Option<T>
-    where P: Fn(&T, &T) -> std::cmp::Ordering {
+    where
+        P: Fn(&T, &T) -> std::cmp::Ordering,
+    {
         let res = self.insert_op(new_v, cmp);
         if self.is_red() {
             self.swap_colour();
         }
         match res {
             Replaced(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
 
@@ -419,7 +408,7 @@ impl<T> Node<T> {
                 return false;
             }
         }
-        
+
         // do switcheroos if required
         if self.child(!right).child_safe(right).is_red() {
             self.inner_switcheroo(!right);
@@ -441,8 +430,13 @@ impl<T> Node<T> {
         } else {
             self.child(right).black();
             self.child(!right).red();
-            if self.is_red() { self.black(); false }
-            else { self.double_black(); true }
+            if self.is_red() {
+                self.black();
+                false
+            } else {
+                self.double_black();
+                true
+            }
         }
     }
 
@@ -468,8 +462,11 @@ impl<T> Node<T> {
             }
             m_swap(&mut tmp, innermost);
             m_swap(&mut self.innards().value, &mut tmp.innards().value);
-            if doubled { Doubled(tmp.gut().value) }
-            else { Removed(tmp.gut().value) }
+            if doubled {
+                Doubled(tmp.gut().value)
+            } else {
+                Removed(tmp.gut().value)
+            }
         } else {
             m_swap(self.get_left_mut(), &mut tmp);
             if self.is_black() {
@@ -481,8 +478,11 @@ impl<T> Node<T> {
                 }
             }
             m_swap(&mut tmp, self);
-            if doubled { Doubled(tmp.gut().value) }
-            else { Removed(tmp.gut().value) }
+            if doubled {
+                Doubled(tmp.gut().value)
+            } else {
+                Removed(tmp.gut().value)
+            }
         }
     }
 
@@ -503,13 +503,11 @@ impl<T> Node<T> {
 
     fn remove_result_step(&mut self, res: Removal<T>, right: bool) -> Removal<T> {
         match res {
-            Match => {
-                self.swap_innermost_descendant()
-            },
+            Match => self.swap_innermost_descendant(),
             Doubled(n) => {
-                let doubled =
-                if self.child(right).is_double_black()
-                        || self.child(right).bring_double_up_root() {
+                let doubled = if self.child(right).is_double_black()
+                    || self.child(right).bring_double_up_root()
+                {
                     self.deletion_switcheroo(right)
                 } else {
                     false
@@ -519,27 +517,27 @@ impl<T> Node<T> {
                 } else {
                     Removed(n)
                 }
-            },
+            }
             Removed(n) => Removed(n),
-            NotFound => NotFound
+            NotFound => NotFound,
         }
     }
 
     fn remove_op<K, P>(&mut self, val: &K, cmp: &P) -> Removal<T>
-    where P: Fn(&K, &T) -> std::cmp::Ordering {
+    where
+        P: Fn(&K, &T) -> std::cmp::Ordering,
+    {
         match self {
             Internal(n) => {
                 let order = cmp(val, &n.value);
                 let (res, right) = match order {
                     Equal => (Match, true),
                     Less => (n.l_child.remove_op(val, cmp), false),
-                    Greater => (n.r_child.remove_op(val, cmp), true)
+                    Greater => (n.r_child.remove_op(val, cmp), true),
                 };
                 self.remove_result_step(res, right)
-            },
-            Leaf(_) => {
-                NotFound
             }
+            Leaf(_) => NotFound,
         }
     }
 
@@ -558,37 +556,37 @@ impl<T> Node<T> {
     pub fn pop(&mut self, back: bool) -> Option<T> {
         match self.pop_op(back) {
             NotFound => None,
-            Removed(v) => {
-                Some(v)
-            },
+            Removed(v) => Some(v),
             Doubled(v) => {
                 self.swap_colour();
                 Some(v)
-            },
+            }
             // uhh, shouldn't ever happen if I've coded it right
-            _ => panic!("Returned invalid option, tree structure damaged")
+            _ => panic!("Returned invalid option, tree structure damaged"),
         }
     }
 
     // as with insertion, this should only be called on the root
     pub fn remove<K, P>(&mut self, val: &K, cmp: &P) -> Option<T>
-    where P: Fn(&K, &T) -> std::cmp::Ordering {
+    where
+        P: Fn(&K, &T) -> std::cmp::Ordering,
+    {
         match self.remove_op(val, cmp) {
             NotFound => None,
-            Removed(v) => {
-                Some(v)
-            },
+            Removed(v) => Some(v),
             Doubled(v) => {
                 self.swap_colour();
                 Some(v)
-            },
+            }
             // uhh, shouldn't ever happen if I've coded it right
-            _ => panic!("Returned invalid option, tree structure damaged")
+            _ => panic!("Returned invalid option, tree structure damaged"),
         }
     }
 
     pub fn get<K, P>(&self, val: &K, cmp: &P) -> Option<&T>
-    where P: Fn(&K, &T) -> std::cmp::Ordering {
+    where
+        P: Fn(&K, &T) -> std::cmp::Ordering,
+    {
         let mut cur = self;
         while !cur.is_leaf() {
             let cur_val = cur.value();
@@ -596,17 +594,19 @@ impl<T> Node<T> {
             match order {
                 Equal => return cur_val,
                 Less => cur = cur.get_left(),
-                Greater => cur = cur.get_right()
+                Greater => cur = cur.get_right(),
             }
         }
         match cur {
             Internal(n) => Some(&n.value),
-            _ => None
+            _ => None,
         }
     }
 
     pub fn get_mut<K, P>(&mut self, val: &K, cmp: &P) -> Option<&mut T>
-    where P: Fn(&K, &T) -> std::cmp::Ordering {
+    where
+        P: Fn(&K, &T) -> std::cmp::Ordering,
+    {
         let mut cur = self;
         while !cur.is_leaf() {
             let cur_val = cur.value().unwrap();
@@ -614,12 +614,12 @@ impl<T> Node<T> {
             match order {
                 Equal => return cur.value_mut(),
                 Less => cur = cur.get_left_mut(),
-                Greater => cur = cur.get_right_mut()
+                Greater => cur = cur.get_right_mut(),
             }
         }
         match cur {
             Internal(n) => Some(&mut n.value),
-            _ => None
+            _ => None,
         }
     }
 
@@ -634,7 +634,7 @@ impl<T> Node<T> {
         }
         match cur {
             Internal(n) => Some(&n.value),
-            _ => None
+            _ => None,
         }
     }
 }
