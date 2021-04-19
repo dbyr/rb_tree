@@ -14,7 +14,7 @@ This data structure provides an interface for using the RBTree as a map. Values 
 
 ### RBQueue
 
-This data structure allows the use of the underlying red-black tree as a priority queue. A comparison function is provided on instantiation (either with `RBQueue::new(Fn(&T, &T) -> std::cmp::Ordering)` or `rbqueue_c_new!(Fn(&T, &T) -> i8)`) which is used to order the entries.
+This data structure allows the use of the underlying red-black tree as a priority queue. A comparison function is provided on instantiation (either with `RBQueue::new(Fn(&T, &T) -> std::cmp::Ordering)` or `new_c_queue!(Fn(&T, &T) -> i8)`) which is used to order the entries.
 
 ## Examples
 
@@ -61,7 +61,7 @@ fn main() {
 ```
 
 ```rust
-#[macro_use(rbqueue_c_new)]
+#[macro_use(new_c_queue)]
 extern crate rb_tree;
 
 use rb_tree::RBQueue;
@@ -74,7 +74,7 @@ fn main() {
     });
 
     // compare in the reverse order
-    let mut q2 = rbqueue_c_new!(|l: &i64, r| (r - l));
+    let mut q2 = new_c_queue!(|l: &i64, r| (r - l));
 
     q1.insert(1);
     q1.insert(2);
@@ -87,3 +87,6 @@ fn main() {
     assert_eq!(q2.ordered(), [&3, &2, &1]);
 }
 ```
+
+# License
+This project is [licensed](./LICENSE.txt) under the terms of the MIT license.
