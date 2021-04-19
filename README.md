@@ -80,3 +80,6 @@ fn main() {
     assert_eq!(q2.ordered(), [&3, &2, &1]);
 }
 ```
+
+# License
+This project is [licensed](./LICENSE.txt) under the terms of the MIT license.
