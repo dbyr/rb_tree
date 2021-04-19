@@ -1,3 +1,5 @@
+#[allow(non_camel_case_types)]
+
 mod node;
 #[cfg(feature = "map")]
 pub mod rbmap;
@@ -44,7 +46,7 @@ pub struct RBTree<T: PartialOrd> {
 #[derive(Clone)]
 pub struct RBQueue<T, P>
 where
-    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+    P: Fn(&T, &T) -> std::cmp::Ordering,
 {
     root: Node<T>,
     contained: usize,

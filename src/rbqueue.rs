@@ -10,7 +10,7 @@ use std::iter::{ExactSizeIterator, FusedIterator};
 
 impl<T: Debug, P> Debug for RBQueue<T, P>
 where
-    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+    P: Fn(&T, &T) -> std::cmp::Ordering,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let mut levels = Vec::new();
@@ -28,7 +28,7 @@ where
 
 impl<T: Debug, P> Display for RBQueue<T, P>
 where
-    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+    P: Fn(&T, &T) -> std::cmp::Ordering,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{:?}", self.ordered())
@@ -37,7 +37,7 @@ where
 
 impl<T, P> RBQueue<T, P>
 where
-    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+    P: Fn(&T, &T) -> std::cmp::Ordering,
 {
     /// Creates and returns a new RBQueue that
     /// will order entries based on cmp.
@@ -410,20 +410,22 @@ where
     /// assert_eq!(t.iter().collect::<Vec<&usize>>(), vec!(&0, &2, &4, &6, &8));
     /// ```
     pub fn retain<F: FnMut(&T) -> bool>(&mut self, mut f: F) {
-        let mut tmp = RBQueue::new(self.cmp);
+        let mut tmp = Vec::with_capacity(self.len());
         while let Some(v) = self.pop() {
             if f(&v) {
-                tmp.insert(v);
+                tmp.push(v);
             }
         }
-        std::mem::swap(&mut tmp, self);
+        while let Some(v) = tmp.pop() {
+            self.insert(v);
+        }
     }
 }
 
 impl<T, P> RBQueue<T, P>
 where
     T: PartialOrd,
-    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+    P: Fn(&T, &T) -> std::cmp::Ordering,
 {
     /// Turns this queue into a set (RBTree)
     /// # Example:
@@ -491,7 +493,7 @@ impl<T> FusedIterator for IntoIter<T> {}
 
 impl<T, P> IntoIterator for RBQueue<T, P>
 where
-    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+    P: Fn(&T, &T) -> std::cmp::Ordering,
 {
     type Item = T;
     type IntoIter = IntoIter<T>;
@@ -507,7 +509,7 @@ where
 
 impl<T, P> Extend<T> for RBQueue<T, P>
 where
-    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+    P: Fn(&T, &T) -> std::cmp::Ordering,
 {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         for i in iter {
@@ -519,7 +521,7 @@ where
 impl<'a, T, P> Extend<&'a T> for RBQueue<T, P>
 where
     T: Copy + 'a,
-    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+    P: Fn(&T, &T) -> std::cmp::Ordering,
 {
     fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
         for &i in iter {
