@@ -4,11 +4,8 @@ extern crate rb_tree;
 use rb_tree::RBQueue;
 
 fn main() {
-    
     // use the default comarator
-    let mut q1 = RBQueue::new(|l: &i64, r| {
-        l.cmp(r)
-    });
+    let mut q1 = RBQueue::new(|l: &i64, r| l.cmp(r));
 
     // compare in the reverse order
     let mut q2 = new_c_queue!(|l: &i64, r| (r - l));

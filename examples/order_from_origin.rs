@@ -8,7 +8,6 @@ fn from_origin(p: &(f64, f64)) -> f64 {
 }
 
 fn main() {
-    
     // orders values by their distance from the origin
     // or absolute size of x value on equal distance
     let mut q = new_c_queue!(|l: &(f64, f64), r| {
@@ -26,5 +25,8 @@ fn main() {
     q.insert((2.0, 3.0));
     q.insert((3.0, 2.0));
 
-    assert_eq!(q.ordered(), [&(0.0, 0.0), &(2.0, 3.0), &(3.0, 2.0), &(-5.0, 0.0)]);
+    assert_eq!(
+        q.ordered(),
+        [&(0.0, 0.0), &(2.0, 3.0), &(3.0, 2.0), &(-5.0, 0.0)]
+    );
 }
