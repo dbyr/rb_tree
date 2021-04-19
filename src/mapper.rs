@@ -2,15 +2,12 @@ use std::fmt::{Debug, Formatter, Result};
 
 pub struct Mapper<K: PartialOrd, V> {
     key: K,
-    val: Option<V>
+    val: Option<V>,
 }
 
 impl<K: PartialOrd, V> Mapper<K, V> {
     pub fn new(key: K, val: Option<V>) -> Mapper<K, V> {
-        Mapper {
-            key,
-            val
-        }
+        Mapper { key, val }
     }
 
     pub fn key(&self) -> &K {

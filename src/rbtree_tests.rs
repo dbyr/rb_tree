@@ -1,6 +1,6 @@
-use crate::{RBTree, RBMap};
-use crate::node::Node;
 use crate::node::Colour::*;
+use crate::node::Node;
+use crate::{RBMap, RBTree};
 
 #[test]
 fn test_print() {
@@ -12,7 +12,10 @@ fn test_print() {
     println!("{:?}", t);
     assert_eq!(format!("{}", t), "[1.0, 1.2, 2.0, 3.0]");
     assert_eq!(t.len(), 4);
-    assert_eq!(format!("{:?}", t), "B:2.0\n2.0->B:1.0 2.0->B:3.0\n1.0->___ 1.0->R:1.2 3.0->___ 3.0->___\n1.2->___ 1.2->___");
+    assert_eq!(
+        format!("{:?}", t),
+        "B:2.0\n2.0->B:1.0 2.0->B:3.0\n1.0->___ 1.0->R:1.2 3.0->___ 3.0->___\n1.2->___ 1.2->___"
+    );
 }
 
 #[test]
@@ -172,11 +175,34 @@ fn test_insertion_case3_not_root() {
     assert_eq!(t.root.get_left().colour(), Black);
     assert_eq!(*t.root.get_right().get_right().value().unwrap(), 3.0);
     assert_eq!(t.root.get_right().get_right().colour(), Red);
-    assert_eq!(*t.root.get_right().get_right().get_right().value().unwrap(), 4.0);
+    assert_eq!(
+        *t.root.get_right().get_right().get_right().value().unwrap(),
+        4.0
+    );
     assert_eq!(t.root.get_right().get_right().get_right().colour(), Black);
-    assert_eq!(*t.root.get_right().get_right().get_right().get_right().value().unwrap(), 5.0);
-    assert_eq!(t.root.get_right().get_right().get_right().get_right().colour(), Red);
-    assert_eq!(*t.root.get_right().get_right().get_left().value().unwrap(), 2.5);
+    assert_eq!(
+        *t.root
+            .get_right()
+            .get_right()
+            .get_right()
+            .get_right()
+            .value()
+            .unwrap(),
+        5.0
+    );
+    assert_eq!(
+        t.root
+            .get_right()
+            .get_right()
+            .get_right()
+            .get_right()
+            .colour(),
+        Red
+    );
+    assert_eq!(
+        *t.root.get_right().get_right().get_left().value().unwrap(),
+        2.5
+    );
     assert_eq!(t.root.get_right().get_right().get_left().colour(), Black);
 }
 
@@ -298,10 +324,7 @@ fn test_removal_notfound() {
     assert!(t.take(&2.1).is_none());
     assert!(t.take(&3.9).is_none());
     assert_eq!(t.contained, 4);
-    assert_eq!(
-        format!("{}", t),
-        "[1.0, 1.5, 2.0, 3.0]"
-    );
+    assert_eq!(format!("{}", t), "[1.0, 1.5, 2.0, 3.0]");
 }
 
 #[test]
@@ -325,10 +348,7 @@ fn test_remove_root() {
         "B:3.0\n3.0->R:1.0 3.0->___\n1.0->___ 1.0->___"
     );
     assert_eq!(t.take(&3.0).unwrap(), 3.0);
-    assert_eq!(
-        format!("{:?}", t),
-        "B:1.0\n1.0->___ 1.0->___"
-    );
+    assert_eq!(format!("{:?}", t), "B:1.0\n1.0->___ 1.0->___");
 
     let mut t = RBTree::new();
     t.insert(2.0);
@@ -366,7 +386,7 @@ fn test_removal_no_double_black() {
     t.insert(1.5);
     t.insert(2.5);
     println!("{:?}", t);
-    
+
     assert_eq!(t.take(&1.0).unwrap(), 1.0);
     println!("{:?}", t);
     assert_eq!(
@@ -744,7 +764,6 @@ fn test_peek() {
     assert_eq!(t.peek(), None);
 }
 
-
 #[test]
 fn test_peek_back() {
     let mut t = RBTree::new();
@@ -767,45 +786,67 @@ fn test_peek_back() {
 fn test_difference() {
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3, 4);
-    let v2 = vec!(2, 3, 4, 5);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3, 4];
+    let v2 = vec![2, 3, 4, 5];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(t1.difference(&t2).collect::<Vec<&usize>>(), vec!(&1));
     assert_eq!(t2.difference(&t1).collect::<Vec<&usize>>(), vec!(&5));
 
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3);
-    let v2 = vec!(0, 2, 3, 4);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3];
+    let v2 = vec![0, 2, 3, 4];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(t1.difference(&t2).collect::<Vec<&usize>>(), vec!(&1));
     assert_eq!(t2.difference(&t1).collect::<Vec<&usize>>(), vec!(&0, &4));
 
     let t1 = RBTree::<usize>::new();
     let t2 = RBTree::new();
-    assert_eq!(t1.difference(&t2).collect::<Vec<&usize>>(), Vec::<&usize>::new());
+    assert_eq!(
+        t1.difference(&t2).collect::<Vec<&usize>>(),
+        Vec::<&usize>::new()
+    );
 
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3);
-    let v2 = vec!(1, 2, 3);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3];
+    let v2 = vec![1, 2, 3];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
 
-    assert_eq!(t1.difference(&t2).collect::<Vec<&usize>>(), Vec::<&usize>::new());
     assert_eq!(
-        t1.difference(&t2).collect::<Vec<&usize>>(), 
+        t1.difference(&t2).collect::<Vec<&usize>>(),
+        Vec::<&usize>::new()
+    );
+    assert_eq!(
+        t1.difference(&t2).collect::<Vec<&usize>>(),
         t2.difference(&t1).collect::<Vec<&usize>>()
     );
 
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3, 4, 6);
-    let v2 = vec!(2, 3, 4, 5);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3, 4, 6];
+    let v2 = vec![2, 3, 4, 5];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(t1.difference(&t2).collect::<Vec<&usize>>(), vec!(&1, &6));
     assert_eq!(t2.difference(&t1).collect::<Vec<&usize>>(), vec!(&5));
 }
@@ -814,10 +855,14 @@ fn test_difference() {
 fn test_symmetric_difference() {
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3, 4);
-    let v2 = vec!(2, 3, 4, 5);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3, 4];
+    let v2 = vec![2, 3, 4, 5];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(
         t1.symmetric_difference(&t2).collect::<Vec<&usize>>(),
         vec!(&1, &5)
@@ -827,13 +872,16 @@ fn test_symmetric_difference() {
         vec!(&1, &5)
     );
 
-
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3, 4);
-    let v2 = vec!(0, 2, 3, 4, 5);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3, 4];
+    let v2 = vec![0, 2, 3, 4, 5];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(
         t1.symmetric_difference(&t2).collect::<Vec<&usize>>(),
         vec!(&0, &1, &5)
@@ -848,10 +896,14 @@ fn test_symmetric_difference() {
 fn test_intersection() {
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3, 4);
-    let v2 = vec!(2, 3, 4, 5);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3, 4];
+    let v2 = vec![2, 3, 4, 5];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(
         t1.intersection(&t2).collect::<Vec<&usize>>(),
         vec!(&2, &3, &4)
@@ -863,10 +915,14 @@ fn test_intersection() {
 
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3, 4);
-    let v2 = vec!(5, 6, 7, 8);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3, 4];
+    let v2 = vec![5, 6, 7, 8];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(
         t1.intersection(&t2).collect::<Vec<&usize>>(),
         Vec::<&usize>::new()
@@ -876,13 +932,16 @@ fn test_intersection() {
         Vec::<&usize>::new()
     );
 
-
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3, 4, 6);
-    let v2 = vec!(2, 3, 4, 5);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3, 4, 6];
+    let v2 = vec![2, 3, 4, 5];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(
         t1.intersection(&t2).collect::<Vec<&usize>>(),
         vec!(&2, &3, &4)
@@ -892,13 +951,16 @@ fn test_intersection() {
         vec!(&2, &3, &4)
     );
 
-
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3, 4, 6, 7);
-    let v2 = vec!(2, 3, 4, 5, 7);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3, 4, 6, 7];
+    let v2 = vec![2, 3, 4, 5, 7];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(
         t1.intersection(&t2).collect::<Vec<&usize>>(),
         vec!(&2, &3, &4, &7)
@@ -913,10 +975,14 @@ fn test_intersection() {
 fn test_union() {
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3, 4);
-    let v2 = vec!(2, 3, 4, 5);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3, 4];
+    let v2 = vec![2, 3, 4, 5];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(
         t1.union(&t2).collect::<Vec<&usize>>(),
         vec!(&1, &2, &3, &4, &5)
@@ -926,13 +992,16 @@ fn test_union() {
         vec!(&1, &2, &3, &4, &5)
     );
 
-
     let mut t1 = RBTree::new();
     let mut t2 = RBTree::new();
-    let v1 = vec!(1, 2, 3, 4, 6);
-    let v2 = vec!(2, 3, 4, 5);
-    v1.into_iter().for_each(|v| {t1.insert(v);});
-    v2.into_iter().for_each(|v| {t2.insert(v);});
+    let v1 = vec![1, 2, 3, 4, 6];
+    let v2 = vec![2, 3, 4, 5];
+    v1.into_iter().for_each(|v| {
+        t1.insert(v);
+    });
+    v2.into_iter().for_each(|v| {
+        t2.insert(v);
+    });
     assert_eq!(
         t1.union(&t2).collect::<Vec<&usize>>(),
         vec!(&1, &2, &3, &4, &5, &6)

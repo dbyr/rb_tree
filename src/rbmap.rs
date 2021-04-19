@@ -1,10 +1,10 @@
-use crate::{RBMap, RBTree};
 use crate::helpers::write_to_level;
-use crate::rbtree;
 use crate::mapper::Mapper;
+use crate::rbtree;
+use crate::{RBMap, RBTree};
 
-use std::iter::{ExactSizeIterator, FusedIterator, FromIterator};
-use std::fmt::{Debug, Result, Formatter, Display};
+use std::fmt::{Debug, Display, Formatter, Result};
+use std::iter::{ExactSizeIterator, FromIterator, FusedIterator};
 
 impl<K: PartialOrd + Debug, V: Debug> Debug for RBMap<K, V> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -28,20 +28,17 @@ impl<K: PartialOrd + Debug, V: Debug> Display for RBMap<K, V> {
 }
 
 impl<K: PartialOrd, V> RBMap<K, V> {
-
     /// Creates and returns a new, empty RBMap
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert("Hello", "World");
     /// assert_eq!(map.remove(&"Hello").unwrap(), "World");
     /// ```
     pub fn new() -> RBMap<K, V> {
-        RBMap {
-            map: RBTree::new()
-        }
+        RBMap { map: RBTree::new() }
     }
 
     /// Creates an RBTree set of the keys
@@ -49,7 +46,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::{RBMap, RBTree};
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert("Hello", "World");
     /// map.insert("Foo", "Bar");
@@ -71,7 +68,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::{RBMap, RBTree};
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert("Hello", "World");
     /// map.insert("Foo", "Bar");
@@ -87,12 +84,12 @@ impl<K: PartialOrd, V> RBMap<K, V> {
         }
         kset
     }
-    
+
     /// Clears all entries from the RBMap
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert("Hello", "world");
     /// map.insert("Foo", "bar");
@@ -110,18 +107,16 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// assert!(!map.contains_key(&"Hello"));
     /// map.insert("Hello", "world");
     /// assert!(map.contains_key(&"Hello"));
     /// ```
     pub fn contains_key(&self, key: &K) -> bool {
-        match self.map.get(
-            &Mapper::new(key, None)
-        ) {
+        match self.map.get(&Mapper::new(key, None)) {
             None => false,
-            Some(v) => v.is_some()
+            Some(v) => v.is_some(),
         }
     }
 
@@ -131,7 +126,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert("Hello", "world");
     /// map.insert("Foo", "bar");
@@ -143,7 +138,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn drain(&mut self) -> Drain<K, V> {
         let mut rep = RBTree::new();
         std::mem::swap(&mut self.map, &mut rep);
-        Drain {tree: rep}
+        Drain { tree: rep }
     }
 
     /// Returns an option containing a reference
@@ -153,18 +148,16 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// assert!(map.get(&"Hello").is_none());
     /// map.insert("Hello", "world");
     /// assert_eq!(map.get(&"Hello").unwrap(), &"world");
     /// ```
     pub fn get(&self, key: &K) -> Option<&V> {
-        match self.map.get(
-            &Mapper::new(key, None)
-        ) {
+        match self.map.get(&Mapper::new(key, None)) {
             Some(v) => Some(v.as_ref()),
-            None => None
+            None => None,
         }
     }
 
@@ -175,18 +168,16 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// assert!(map.get(&"Hello").is_none());
     /// map.insert("Hello", "world");
     /// assert_eq!(map.get_pair(&"Hello").unwrap(), (&"Hello", &"world"));
     /// ```
     pub fn get_pair(&self, key: &K) -> Option<(&K, &V)> {
-        match self.map.get(
-            &Mapper::new(key, None)
-        ) {
+        match self.map.get(&Mapper::new(key, None)) {
             Some(v) => Some((v.key(), v.as_ref())),
-            None => None
+            None => None,
         }
     }
 
@@ -198,18 +189,16 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// assert!(map.get(&"Hello").is_none());
     /// map.insert("Hello", "world");
     /// assert_eq!(map.get_pair(&"Hello").unwrap(), (&"Hello", &"world"));
     /// ```
     pub fn get_pair_mut(&mut self, key: &K) -> Option<(&K, &mut V)> {
-        match self.map.get_mut(
-            &Mapper::new(key, None)
-        ) {
+        match self.map.get_mut(&Mapper::new(key, None)) {
             Some(v) => Some(v.mut_pair()),
-            None => None
+            None => None,
         }
     }
 
@@ -220,7 +209,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// assert!(map.get(&"Hello").is_none());
     /// map.insert("Hello", "world");
@@ -228,11 +217,9 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.get(&"Hello").unwrap(), &"world!");
     /// ```
     pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
-        match self.map.get_mut(
-            &Mapper::new(key, None)
-        ) {
+        match self.map.get_mut(&Mapper::new(key, None)) {
             Some(v) => Some(v.as_mut()),
-            None => None
+            None => None,
         }
     }
 
@@ -256,7 +243,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn peek(&self) -> Option<&V> {
         match self.map.peek() {
             Some(v) => Some(v.as_ref()),
-            None => None
+            None => None,
         }
     }
 
@@ -280,7 +267,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn peek_back(&self) -> Option<&V> {
         match self.map.peek_back() {
             Some(v) => Some(v.as_ref()),
-            None => None
+            None => None,
         }
     }
 
@@ -304,7 +291,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn peek_pair(&self) -> Option<(&K, &V)> {
         match self.map.peek() {
             Some(v) => Some(v.pair()),
-            None => None
+            None => None,
         }
     }
 
@@ -328,7 +315,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn peek_pair_back(&self) -> Option<(&K, &V)> {
         match self.map.peek_back() {
             Some(v) => Some(v.pair()),
-            None => None
+            None => None,
         }
     }
 
@@ -338,18 +325,16 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert("Hello", "world");
     /// map.insert("Foo", "bar");
     /// assert_eq!(map.len(), 2);
     /// ```
     pub fn insert(&mut self, key: K, val: V) -> Option<(K, V)> {
-        match self.map.replace(
-            Mapper::new(key, Some(val))
-        ) {
+        match self.map.replace(Mapper::new(key, Some(val))) {
             Some(v) => Some(v.consume()),
-            None => None
+            None => None,
         }
     }
 
@@ -358,7 +343,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// assert!(map.is_empty());
     /// map.insert(1, 2);
@@ -367,13 +352,13 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn is_empty(&self) -> bool {
         self.map.len() == 0
     }
-    
+
     /// Returns the number of key-value pairs stored
     /// in this RBMap.
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// assert_eq!(map.len(), 0);
     /// map.insert(1, 1);
@@ -393,18 +378,16 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// assert!(map.remove(&2).is_none());
     /// map.insert(2, 4);
     /// assert_eq!(map.remove(&2).unwrap(), 4);
     /// ```
     pub fn remove(&mut self, key: &K) -> Option<V> {
-        match self.map.take(
-            &Mapper::new(key, None)
-        ) {
+        match self.map.take(&Mapper::new(key, None)) {
             Some(v) => Some(v.consume().1),
-            None => None
+            None => None,
         }
     }
 
@@ -414,18 +397,16 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// assert!(map.remove_entry(&2).is_none());
     /// map.insert(2, 4);
     /// assert_eq!(map.remove_entry(&2).unwrap(), (2, 4));
     /// ```
     pub fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
-        match self.map.take(
-            &Mapper::new(key, None)
-        ) {
+        match self.map.take(&Mapper::new(key, None)) {
             Some(v) => Some(v.consume()),
-            None => None
+            None => None,
         }
     }
 
@@ -449,7 +430,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn pop(&mut self) -> Option<V> {
         match self.map.pop() {
             Some(v) => Some(v.consume().1),
-            None => None
+            None => None,
         }
     }
 
@@ -473,7 +454,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn pop_back(&mut self) -> Option<V> {
         match self.map.pop_back() {
             Some(v) => Some(v.consume().1),
-            None => None
+            None => None,
         }
     }
 
@@ -497,7 +478,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn pop_pair(&mut self) -> Option<(K, V)> {
         match self.map.pop() {
             Some(v) => Some(v.consume()),
-            None => None
+            None => None,
         }
     }
 
@@ -521,7 +502,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn pop_pair_back(&mut self) -> Option<(K, V)> {
         match self.map.pop_back() {
             Some(v) => Some(v.consume()),
-            None => None
+            None => None,
         }
     }
 
@@ -530,13 +511,13 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert(1, 1);
     /// map.insert(2, 4);
     /// map.insert(3, 9);
     /// map.retain(|_, v| *v % 2 == 0);
-    /// 
+    ///
     /// let mut pairs = map.drain();
     /// assert_eq!(pairs.next().unwrap(), (2, 4));
     /// assert_eq!(pairs.next(), None);
@@ -556,12 +537,12 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert(1, 1);
     /// map.insert(2, 4);
     /// map.insert(3, 9);
-    /// 
+    ///
     /// let mut pairs = map.iter();
     /// assert_eq!(pairs.next().unwrap(), (&1, &1));
     /// assert_eq!(pairs.next().unwrap(), (&2, &4));
@@ -571,7 +552,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn iter(&self) -> Iter<K, V> {
         Iter {
             pos: 0,
-            ordered: self.ordered()
+            ordered: self.ordered(),
         }
     }
 
@@ -581,14 +562,14 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert(1, 1);
     /// map.insert(2, 4);
     /// map.insert(3, 9);
-    /// 
+    ///
     /// map.iter_mut().for_each(|(_, v)| *v *= 2);
-    /// 
+    ///
     /// let mut pairs = map.iter();
     /// assert_eq!(pairs.next().unwrap(), (&1, &2));
     /// assert_eq!(pairs.next().unwrap(), (&2, &8));
@@ -597,7 +578,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// ```
     pub fn iter_mut(&mut self) -> IterMut<K, V> {
         IterMut {
-            iter: self.map.iter()
+            iter: self.map.iter(),
         }
     }
 
@@ -606,12 +587,12 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert(1, 1);
     /// map.insert(2, 4);
     /// map.insert(3, 9);
-    /// 
+    ///
     /// let mut vals = map.values();
     /// assert_eq!(*vals.next().unwrap(), 1);
     /// assert_eq!(*vals.next().unwrap(), 4);
@@ -621,7 +602,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn values(&self) -> Values<K, V> {
         Values {
             pos: 0,
-            ordered: self.ordered()
+            ordered: self.ordered(),
         }
     }
 
@@ -631,14 +612,14 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert(1, 1);
     /// map.insert(2, 4);
     /// map.insert(3, 9);
-    /// 
+    ///
     /// map.values_mut().for_each(|v| *v *= 2);
-    /// 
+    ///
     /// let mut vals = map.values();
     /// assert_eq!(*vals.next().unwrap(), 2);
     /// assert_eq!(*vals.next().unwrap(), 8);
@@ -647,7 +628,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// ```
     pub fn values_mut(&mut self) -> ValuesMut<K, V> {
         ValuesMut {
-            iter: self.iter_mut()
+            iter: self.iter_mut(),
         }
     }
 
@@ -656,12 +637,12 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert(1, 1);
     /// map.insert(2, 4);
     /// map.insert(3, 9);
-    /// 
+    ///
     /// let mut keys = map.keys();
     /// assert_eq!(*keys.next().unwrap(), 1);
     /// assert_eq!(*keys.next().unwrap(), 2);
@@ -671,7 +652,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     pub fn keys(&self) -> Keys<K, V> {
         Keys {
             pos: 0,
-            ordered: self.ordered()
+            ordered: self.ordered(),
         }
     }
 
@@ -680,18 +661,15 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::RBMap;
-    /// 
+    ///
     /// let mut map = RBMap::new();
-    /// 
+    ///
     /// let val = map.entry(1).or_insert(2);
     /// *val = 3;
     /// assert_eq!(*map.get(&1).unwrap(), 3);
     /// ```
     pub fn entry(&mut self, key: K) -> Entry<K, V> {
-        Entry {
-            map: self,
-            key
-        }
+        Entry { map: self, key }
     }
 
     // internal helper methods
@@ -701,13 +679,12 @@ impl<K: PartialOrd, V> RBMap<K, V> {
 }
 
 impl<K: PartialOrd, V: PartialOrd> RBMap<K, V> {
-
     /// Creates an RBTree set of the values
     /// contained in this map.
     /// # Example:
     /// ```
     /// use rb_tree::{RBMap, RBTree};
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert("Hello", "World");
     /// map.insert("Foo", "Bar");
@@ -726,13 +703,13 @@ impl<K: PartialOrd, V: PartialOrd> RBMap<K, V> {
 
     /// Creates a set of keys and a set of values
     /// from the given map.
-    /// 
+    ///
     /// Note: any mapping information is lost
     /// when this operation is performed.
     /// # Example:
     /// ```
     /// use rb_tree::{RBMap, RBTree};
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert("Hello", "World");
     /// map.insert("Foo", "Bar");
@@ -759,7 +736,7 @@ impl<K: PartialOrd, V: PartialOrd> RBMap<K, V> {
     /// # Example:
     /// ```
     /// use rb_tree::{RBMap, RBTree};
-    /// 
+    ///
     /// let mut map = RBMap::new();
     /// map.insert("Hello", "World");
     /// map.insert("Foo", "Bar");
@@ -784,7 +761,7 @@ impl<K: PartialOrd, V> Default for RBMap<K, V> {
 }
 
 pub struct IntoIter<K: PartialOrd, V> {
-    tree: RBTree<Mapper<K, V>>
+    tree: RBTree<Mapper<K, V>>,
 }
 
 impl<K: PartialOrd, V> Iterator for IntoIter<K, V> {
@@ -793,7 +770,7 @@ impl<K: PartialOrd, V> Iterator for IntoIter<K, V> {
     fn next(&mut self) -> Option<(K, V)> {
         match self.tree.pop() {
             Some(v) => Some(v.consume()),
-            None => None
+            None => None,
         }
     }
 }
@@ -817,7 +794,7 @@ impl<K: PartialOrd, V> Iterator for IntoIter<K, V> {
 /// let _ = iterator.next();
 /// assert_eq!(iterator.len(), 3);
 /// ```
-impl<K: PartialOrd, V> ExactSizeIterator for IntoIter<K, V>  {
+impl<K: PartialOrd, V> ExactSizeIterator for IntoIter<K, V> {
     fn len(&self) -> usize {
         self.tree.len()
     }
@@ -830,14 +807,12 @@ impl<K: PartialOrd, V> IntoIterator for RBMap<K, V> {
     type IntoIter = IntoIter<K, V>;
 
     fn into_iter(self) -> IntoIter<K, V> {
-        IntoIter {
-            tree: self.map
-        }
+        IntoIter { tree: self.map }
     }
 }
 
 impl<K: PartialOrd, V> FromIterator<(K, V)> for RBMap<K, V> {
-    fn from_iter<I: IntoIterator<Item=(K, V)>>(iter: I) -> Self {
+    fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self {
         let mut map = RBMap::new();
         for (key, val) in iter {
             map.insert(key, val);
@@ -866,7 +841,7 @@ impl<'a, K: PartialOrd + Copy + 'a, V: Copy + 'a> Extend<(&'a K, &'a V)> for RBM
 // borrow can occur when mutable
 pub struct Iter<'a, K: PartialOrd, V> {
     pos: usize,
-    ordered: Vec<(&'a K, &'a V)>
+    ordered: Vec<(&'a K, &'a V)>,
 }
 
 impl<'a, K: PartialOrd, V> Iterator for Iter<'a, K, V> {
@@ -877,8 +852,8 @@ impl<'a, K: PartialOrd, V> Iterator for Iter<'a, K, V> {
             Some(v) => {
                 self.pos += 1;
                 Some(*v)
-            },
-            None => None
+            }
+            None => None,
         }
     }
 }
@@ -893,7 +868,7 @@ impl<'a, K: PartialOrd, V> FusedIterator for Iter<'a, K, V> {}
 
 pub struct Keys<'a, K: PartialOrd, V> {
     pos: usize,
-    ordered: Vec<(&'a K, &'a V)>
+    ordered: Vec<(&'a K, &'a V)>,
 }
 
 impl<'a, K: PartialOrd, V> Iterator for Keys<'a, K, V> {
@@ -904,8 +879,8 @@ impl<'a, K: PartialOrd, V> Iterator for Keys<'a, K, V> {
             Some(v) => {
                 self.pos += 1;
                 Some(v.0)
-            },
-            None => None
+            }
+            None => None,
         }
     }
 }
@@ -920,7 +895,7 @@ impl<'a, K: PartialOrd, V> FusedIterator for Keys<'a, K, V> {}
 
 pub struct Values<'a, K: PartialOrd, V> {
     pos: usize,
-    ordered: Vec<(&'a K, &'a V)>
+    ordered: Vec<(&'a K, &'a V)>,
 }
 
 impl<'a, K: PartialOrd, V> Iterator for Values<'a, K, V> {
@@ -931,8 +906,8 @@ impl<'a, K: PartialOrd, V> Iterator for Values<'a, K, V> {
             Some(v) => {
                 self.pos += 1;
                 Some(v.1)
-            },
-            None => None
+            }
+            None => None,
         }
     }
 }
@@ -946,7 +921,7 @@ impl<'a, K: PartialOrd, V> ExactSizeIterator for Values<'a, K, V> {
 impl<'a, K: PartialOrd, V> FusedIterator for Values<'a, K, V> {}
 
 pub struct ValuesMut<'a, K: PartialOrd, V> {
-    iter: IterMut<'a, K, V>
+    iter: IterMut<'a, K, V>,
 }
 
 impl<'a, K: PartialOrd, V> Iterator for ValuesMut<'a, K, V> {
@@ -955,7 +930,7 @@ impl<'a, K: PartialOrd, V> Iterator for ValuesMut<'a, K, V> {
     fn next(&mut self) -> Option<&'a mut V> {
         match self.iter.next() {
             Some(v) => Some(v.1),
-            None => None
+            None => None,
         }
     }
 }
@@ -969,7 +944,7 @@ impl<'a, K: PartialOrd, V> ExactSizeIterator for ValuesMut<'a, K, V> {
 impl<'a, K: PartialOrd, V> FusedIterator for ValuesMut<'a, K, V> {}
 
 pub struct IterMut<'a, K: PartialOrd, V> {
-    iter: rbtree::Iter<'a, Mapper<K, V>>
+    iter: rbtree::Iter<'a, Mapper<K, V>>,
 }
 
 impl<'a, K: PartialOrd, V> Iterator for IterMut<'a, K, V> {
@@ -984,8 +959,8 @@ impl<'a, K: PartialOrd, V> Iterator for IterMut<'a, K, V> {
                     &mut *(ptr as *mut Mapper<K, V>)
                 };
                 Some(v.mut_pair())
-            },
-            None => None
+            }
+            None => None,
         }
     }
 }
@@ -999,7 +974,7 @@ impl<'a, K: PartialOrd, V> ExactSizeIterator for IterMut<'a, K, V> {
 impl<'a, K: PartialOrd, V> FusedIterator for IterMut<'a, K, V> {}
 
 pub struct Drain<K: PartialOrd, V> {
-    tree: RBTree<Mapper<K, V>>
+    tree: RBTree<Mapper<K, V>>,
 }
 
 impl<K: PartialOrd, V> Iterator for Drain<K, V> {
@@ -1009,7 +984,7 @@ impl<K: PartialOrd, V> Iterator for Drain<K, V> {
         let next = self.tree.pop();
         match next {
             Some(v) => Some(v.consume()),
-            None => None
+            None => None,
         }
     }
 }
@@ -1024,7 +999,7 @@ impl<K: PartialOrd, V> FusedIterator for Drain<K, V> {}
 
 pub struct Entry<'a, K: PartialOrd, V> {
     map: &'a mut RBMap<K, V>,
-    key: K
+    key: K,
 }
 
 /// Follows a similar implementation to std::collections::HashMap,
@@ -1036,14 +1011,20 @@ pub struct Entry<'a, K: PartialOrd, V> {
 impl<'a, K: PartialOrd + Copy, V> Entry<'a, K, V> {
     pub fn insert(self, val: V) -> (&'a K, &'a mut V) {
         match self.map.remove_entry(&self.key) {
-            Some((k, _)) => {self.map.insert(k, val);},
-            None => {self.map.insert(self.key, val);}
+            Some((k, _)) => {
+                self.map.insert(k, val);
+            }
+            None => {
+                self.map.insert(self.key, val);
+            }
         }
         self.map.get_pair_mut(&self.key).unwrap()
     }
-    
+
     pub fn and_modify<F>(self, f: F) -> Entry<'a, K, V>
-    where F: FnOnce(&mut V) {
+    where
+        F: FnOnce(&mut V),
+    {
         if let Some(v) = self.map.get_mut(&self.key).as_mut() {
             f(*v);
         }
@@ -1058,7 +1039,9 @@ impl<'a, K: PartialOrd + Copy, V> Entry<'a, K, V> {
     }
 
     pub fn or_insert_with<F>(self, default: F) -> &'a mut V
-    where F: FnOnce() -> V {
+    where
+        F: FnOnce() -> V,
+    {
         if !self.map.contains_key(&self.key) {
             self.map.insert(self.key, default());
         }
@@ -1066,10 +1049,11 @@ impl<'a, K: PartialOrd + Copy, V> Entry<'a, K, V> {
     }
 }
 
-
 impl<'a, K: PartialOrd + Copy, V: Default> Entry<'a, K, V> {
     pub fn or_default<F>(self) -> &'a mut V
-    where F: FnOnce() -> V {
+    where
+        F: FnOnce() -> V,
+    {
         if !self.map.contains_key(&self.key) {
             self.map.insert(self.key, V::default());
         }

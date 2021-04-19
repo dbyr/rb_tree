@@ -1,11 +1,11 @@
-use crate::{RBTree, RBQueue};
+use crate::helpers::{insert_left_down, ordered_insertion, write_to_level};
 use crate::node::Colour::Black;
 use crate::node::Node;
 use crate::node::Node::Leaf;
-use crate::helpers::{write_to_level, ordered_insertion, insert_left_down};
+use crate::{RBQueue, RBTree};
 
-use std::fmt::{Debug, Display, Result, Formatter};
-use std::iter::{ExactSizeIterator, FusedIterator, FromIterator};
+use std::fmt::{Debug, Display, Formatter, Result};
+use std::iter::{ExactSizeIterator, FromIterator, FusedIterator};
 
 fn partial_ord<T, K: PartialOrd<T>>(l: &K, r: &T) -> std::cmp::Ordering {
     l.partial_cmp(r).unwrap()
@@ -33,12 +33,11 @@ impl<T: PartialOrd + Debug> Display for RBTree<T> {
 }
 
 impl<T: PartialOrd> RBTree<T> {
-
     /// Creates and returns a new RBTree.
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(3);
     /// t.insert(2);
@@ -47,7 +46,7 @@ impl<T: PartialOrd> RBTree<T> {
     pub fn new() -> RBTree<T> {
         RBTree {
             root: Leaf(Black),
-            contained: 0
+            contained: 0,
         }
     }
 
@@ -57,12 +56,12 @@ impl<T: PartialOrd> RBTree<T> {
     /// ```
     /// use rb_tree::{RBTree, RBQueue};
     /// use std::cmp::Ordering::{Equal, Less, Greater};
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(3);
     /// t.insert(2);
     /// t.insert(1);
-    /// 
+    ///
     /// // reverse order queue
     /// let mut q = t.into_queue(|l, r| {
     ///     match l - r {
@@ -76,8 +75,10 @@ impl<T: PartialOrd> RBTree<T> {
     /// assert_eq!(q.pop().unwrap(), 1);
     /// assert_eq!(q.pop(), None);
     /// ```
-    pub fn into_queue<P>(self, comp: P) -> RBQueue<T, P> 
-    where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
+    pub fn into_queue<P>(self, comp: P) -> RBQueue<T, P>
+    where
+        P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+    {
         let mut queue = RBQueue::new(comp);
         for v in self {
             queue.insert(v);
@@ -89,7 +90,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut tree = RBTree::new();
     /// tree.insert(2);
     /// tree.insert(5);
@@ -107,7 +108,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut tree = RBTree::new();
     /// tree.insert(2);
     /// tree.insert(5);
@@ -121,7 +122,7 @@ impl<T: PartialOrd> RBTree<T> {
     pub fn drain(&mut self) -> Drain<T> {
         let mut rep = RBTree::new();
         std::mem::swap(&mut rep, self);
-        Drain {tree: rep}
+        Drain { tree: rep }
     }
 
     /// Returns a vector presenting the contained
@@ -131,7 +132,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(3);
     /// t.insert(1);
@@ -150,7 +151,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(3);
     /// t.insert(1);
@@ -168,7 +169,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// assert!(t.is_empty());
     /// t.insert(3);
@@ -184,7 +185,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// assert_eq!(t.insert("Hello".to_string()), true);
     /// assert_eq!(t.insert("Hello".to_string()), false);
@@ -206,7 +207,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// assert_eq!(t.replace("Hello".to_string()), None);
     /// assert_eq!(t.replace("Hello".to_string()), Some("Hello".to_string()));
@@ -226,7 +227,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(2);
     /// assert!(!t.contains(&3));
@@ -241,7 +242,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(1);
     /// assert_eq!(*t.get(&1).unwrap(), 1);
@@ -260,7 +261,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(4);
     /// t.insert(2);
@@ -273,8 +274,8 @@ impl<T: PartialOrd> RBTree<T> {
             Some(v) => {
                 self.contained -= 1;
                 Some(v)
-            },
-            None => None
+            }
+            None => None,
         }
     }
 
@@ -283,7 +284,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(4);
     /// t.insert(2);
@@ -296,8 +297,8 @@ impl<T: PartialOrd> RBTree<T> {
             Some(_) => {
                 self.contained -= 1;
                 true
-            },
-            None => false
+            }
+            None => false,
         }
     }
 
@@ -307,7 +308,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(2);
     /// t.insert(1);
@@ -319,8 +320,8 @@ impl<T: PartialOrd> RBTree<T> {
             Some(v) => {
                 self.contained -= 1;
                 Some(v)
-            },
-            None => None
+            }
+            None => None,
         }
     }
 
@@ -330,7 +331,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(2);
     /// t.insert(1);
@@ -347,7 +348,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(2);
     /// t.insert(1);
@@ -359,8 +360,8 @@ impl<T: PartialOrd> RBTree<T> {
             Some(v) => {
                 self.contained -= 1;
                 Some(v)
-            },
-            None => None
+            }
+            None => None,
         }
     }
 
@@ -370,7 +371,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(2);
     /// t.insert(1);
@@ -386,7 +387,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t = RBTree::new();
     /// t.insert(3);
     /// t.insert(1);
@@ -398,7 +399,7 @@ impl<T: PartialOrd> RBTree<T> {
         insert_left_down(&self.root, &mut ordered);
         Iter {
             remaining: self.len(),
-            ordered
+            ordered,
         }
     }
 
@@ -409,7 +410,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t1 = RBTree::new();
     /// let mut t2 = RBTree::new();
     /// (0..3).for_each(|v| {t1.insert(v);});
@@ -423,17 +424,14 @@ impl<T: PartialOrd> RBTree<T> {
     ///     vec!(&3, &4)
     /// );
     /// ```
-    pub fn difference<'a>(
-        &'a self,
-        other: &'a RBTree<T>
-    ) -> Difference<'a, T> {
+    pub fn difference<'a>(&'a self, other: &'a RBTree<T>) -> Difference<'a, T> {
         let mut iterl = self.iter();
         let mut iterr = other.iter();
         Difference {
             nextl: iterl.next(),
             nextr: iterr.next(),
             left: iterl,
-            right: iterr
+            right: iterr,
         }
     }
 
@@ -444,7 +442,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t1 = RBTree::new();
     /// let mut t2 = RBTree::new();
     /// (0..3).for_each(|v| {t1.insert(v);});
@@ -458,17 +456,14 @@ impl<T: PartialOrd> RBTree<T> {
     ///     vec!(&0, &1, &3, &4)
     /// );
     /// ```
-    pub fn symmetric_difference<'a>(
-        &'a self,
-        other: &'a RBTree<T>
-    ) -> SymmetricDifference<'a, T> {
+    pub fn symmetric_difference<'a>(&'a self, other: &'a RBTree<T>) -> SymmetricDifference<'a, T> {
         let mut iterl = self.iter();
         let mut iterr = other.iter();
         SymmetricDifference {
             nextl: iterl.next(),
             nextr: iterr.next(),
             left: iterl,
-            right: iterr
+            right: iterr,
         }
     }
 
@@ -478,7 +473,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t1 = RBTree::new();
     /// let mut t2 = RBTree::new();
     /// (0..3).for_each(|v| {t1.insert(v);});
@@ -488,17 +483,14 @@ impl<T: PartialOrd> RBTree<T> {
     ///     vec!(&2)
     /// );
     /// ```
-    pub fn intersection<'a>(
-        &'a self,
-        other: &'a RBTree<T>
-    ) -> Intersection<'a, T> {
+    pub fn intersection<'a>(&'a self, other: &'a RBTree<T>) -> Intersection<'a, T> {
         let mut iterl = self.iter();
         let mut iterr = other.iter();
         Intersection {
             nextl: iterl.next(),
             nextr: iterr.next(),
             left: iterl,
-            right: iterr
+            right: iterr,
         }
     }
 
@@ -508,7 +500,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t1 = RBTree::new();
     /// let mut t2 = RBTree::new();
     /// (0..3).for_each(|v| {t1.insert(v);});
@@ -518,17 +510,14 @@ impl<T: PartialOrd> RBTree<T> {
     ///     vec!(&0, &1, &2, &3, &4)
     /// );
     /// ```
-    pub fn union<'a>(
-        &'a self,
-        other: &'a RBTree<T>
-    ) -> Union<'a, T> {
+    pub fn union<'a>(&'a self, other: &'a RBTree<T>) -> Union<'a, T> {
         let mut iterl = self.iter();
         let mut iterr = other.iter();
         Union {
             nextl: iterl.next(),
             nextr: iterr.next(),
             left: iterl,
-            right: iterr
+            right: iterr,
         }
     }
 
@@ -538,7 +527,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t1 = RBTree::new();
     /// let mut t2 = RBTree::new();
     /// (0..3).for_each(|v| {t1.insert(v);});
@@ -557,7 +546,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t1 = RBTree::new();
     /// let mut t2 = RBTree::new();
     /// let mut t3 = RBTree::new();
@@ -577,7 +566,7 @@ impl<T: PartialOrd> RBTree<T> {
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t1 = RBTree::new();
     /// let mut t2 = RBTree::new();
     /// let mut t3 = RBTree::new();
@@ -591,12 +580,12 @@ impl<T: PartialOrd> RBTree<T> {
         other.intersection(self).count() == other.len()
     }
 
-    /// Retains in this RBTree only those values for which 
+    /// Retains in this RBTree only those values for which
     /// the passed closure returns true.
     /// # Example:
     /// ```
     /// use rb_tree::RBTree;
-    /// 
+    ///
     /// let mut t: RBTree<usize> = (0..10).collect();
     /// t.retain(|v| v % 2 == 0);
     /// assert_eq!(t.iter().collect::<Vec<&usize>>(), vec!(&0, &2, &4, &6, &8));
@@ -613,7 +602,10 @@ impl<T: PartialOrd> RBTree<T> {
 }
 
 impl<T, P> From<RBQueue<T, P>> for RBTree<T>
-where T: PartialOrd, P: Copy + Fn(&T, &T) -> std::cmp::Ordering{
+where
+    T: PartialOrd,
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+{
     fn from(q: RBQueue<T, P>) -> Self {
         q.into_set()
     }
@@ -626,7 +618,7 @@ impl<T: PartialOrd> Default for RBTree<T> {
 }
 
 pub struct IntoIter<T: PartialOrd> {
-    tree: RBTree<T>
+    tree: RBTree<T>,
 }
 
 impl<T: PartialOrd> Iterator for IntoIter<T> {
@@ -652,7 +644,7 @@ impl<T: PartialOrd> Iterator for IntoIter<T> {
 /// let _ = iterator.next();
 /// assert_eq!(iterator.len(), 2);
 /// ```
-impl<T: PartialOrd> ExactSizeIterator for IntoIter<T>  {
+impl<T: PartialOrd> ExactSizeIterator for IntoIter<T> {
     fn len(&self) -> usize {
         self.tree.len()
     }
@@ -665,14 +657,12 @@ impl<T: PartialOrd> IntoIterator for RBTree<T> {
     type IntoIter = IntoIter<T>;
 
     fn into_iter(self) -> IntoIter<T> {
-        IntoIter {
-            tree: self
-        }
+        IntoIter { tree: self }
     }
 }
 
 impl<T: PartialOrd> FromIterator<T> for RBTree<T> {
-    fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut tree = RBTree::new();
         for i in iter {
             tree.insert(i);
@@ -698,7 +688,7 @@ impl<'a, T: PartialOrd + Copy + 'a> Extend<&'a T> for RBTree<T> {
 }
 
 pub struct Drain<T: PartialOrd> {
-    tree: RBTree<T>
+    tree: RBTree<T>,
 }
 
 impl<T: PartialOrd> Iterator for Drain<T> {
@@ -719,7 +709,7 @@ impl<T: PartialOrd> FusedIterator for Drain<T> {}
 
 pub struct Iter<'a, T: PartialOrd> {
     remaining: usize,
-    ordered: Vec<&'a Node<T>>
+    ordered: Vec<&'a Node<T>>,
 }
 
 impl<'a, T: PartialOrd> Iterator for Iter<'a, T> {
@@ -728,7 +718,7 @@ impl<'a, T: PartialOrd> Iterator for Iter<'a, T> {
     fn next(&mut self) -> Option<&'a T> {
         let next = match self.ordered.pop() {
             Some(n) => n,
-            None => return None
+            None => return None,
         };
         self.remaining -= 1;
         insert_left_down(next.get_right(), &mut self.ordered);
@@ -748,14 +738,13 @@ pub struct Difference<'a, T: PartialOrd> {
     nextl: Option<&'a T>,
     nextr: Option<&'a T>,
     left: Iter<'a, T>,
-    right: Iter<'a, T>
+    right: Iter<'a, T>,
 }
 
 impl<'a, T: PartialOrd> Iterator for Difference<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<&'a T> {
-
         // select and store the next next
         let mut res = None;
         'left: while let Some(vl) = self.nextl {
@@ -786,14 +775,13 @@ pub struct SymmetricDifference<'a, T: PartialOrd> {
     nextl: Option<&'a T>,
     nextr: Option<&'a T>,
     left: Iter<'a, T>,
-    right: Iter<'a, T>
+    right: Iter<'a, T>,
 }
 
 impl<'a, T: PartialOrd> Iterator for SymmetricDifference<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<&'a T> {
-
         // select and store the next next
         let mut res = None;
         'left: while let Some(vl) = self.nextl {
@@ -834,14 +822,13 @@ pub struct Intersection<'a, T: PartialOrd> {
     nextl: Option<&'a T>,
     nextr: Option<&'a T>,
     left: Iter<'a, T>,
-    right: Iter<'a, T>
+    right: Iter<'a, T>,
 }
 
 impl<'a, T: PartialOrd> Iterator for Intersection<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<&'a T> {
-
         // select and store the next next
         let mut res = None;
         'left: while let Some(vl) = self.nextl {
@@ -872,14 +859,13 @@ pub struct Union<'a, T: PartialOrd> {
     nextl: Option<&'a T>,
     nextr: Option<&'a T>,
     left: Iter<'a, T>,
-    right: Iter<'a, T>
+    right: Iter<'a, T>,
 }
 
 impl<'a, T: PartialOrd> Iterator for Union<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<&'a T> {
-
         // select and store the next next
         let mut res = None;
         let mut need_next = true;

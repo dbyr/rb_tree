@@ -16,7 +16,6 @@ fn test_complex_tree_use() {
     let max_size = 14;
     let min_size = 7;
     for _ in 0..100000 {
-
         to_add.clear();
         to_del.clear();
 
