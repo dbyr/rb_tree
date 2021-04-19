@@ -36,7 +36,7 @@ pub struct RBTree<T: PartialOrd> {
 #[derive(Clone)]
 pub struct RBQueue<T, P>
 where
-    P: Copy + Fn(&T, &T) -> std::cmp::Ordering
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
 {
     root: Node<T>,
     contained: usize,
