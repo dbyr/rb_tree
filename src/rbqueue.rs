@@ -497,6 +497,29 @@ where P: Copy + Fn(&T, &T) -> std::cmp::Ordering {
     }
 }
 
+impl<T, P> Extend<T> for RBQueue<T, P>
+where
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+{
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        for i in iter {
+            self.insert(i);
+        }
+    }
+}
+
+impl<'a, T, P> Extend<&'a T> for RBQueue<T, P>
+where
+    T: Copy + 'a,
+    P: Copy + Fn(&T, &T) -> std::cmp::Ordering,
+{
+    fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
+        for &i in iter {
+            self.insert(i);
+        }
+    }
+}
+
 pub struct Drain<T> {
     ordered: Vec<T>
 }

@@ -846,6 +846,22 @@ impl<K: PartialOrd, V> FromIterator<(K, V)> for RBMap<K, V> {
     }
 }
 
+impl<K: PartialOrd, V> Extend<(K, V)> for RBMap<K, V> {
+    fn extend<I: IntoIterator<Item = (K, V)>>(&mut self, iter: I) {
+        for (key, val) in iter {
+            self.insert(key, val);
+        }
+    }
+}
+
+impl<'a, K: PartialOrd + Copy + 'a, V: Copy + 'a> Extend<(&'a K, &'a V)> for RBMap<K, V> {
+    fn extend<I: IntoIterator<Item = (&'a K, &'a V)>>(&mut self, iter: I) {
+        for (&key, &val) in iter {
+            self.insert(key, val);
+        }
+    }
+}
+
 // this should be fine to do since only one
 // borrow can occur when mutable
 pub struct Iter<'a, K: PartialOrd, V> {
