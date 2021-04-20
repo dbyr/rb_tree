@@ -5,11 +5,9 @@ struct ByReference {
 }
 
 impl Default for ByReference {
-    fn default() -> Self{
+    fn default() -> Self {
         Self {
-            queue: RBQueue::new(&|l: &i32, r:&i32| {
-                l.cmp(r)
-            })
+            queue: RBQueue::new(&|l: &i32, r: &i32| l.cmp(r)),
         }
     }
 }
@@ -19,11 +17,9 @@ struct Boxing {
 }
 
 impl Default for Boxing {
-    fn default() -> Self{
+    fn default() -> Self {
         Self {
-            queue: RBQueue::new(Box::new(|l: &i32, r:&i32| {
-                l.cmp(r)
-            }))
+            queue: RBQueue::new(Box::new(|l: &i32, r: &i32| l.cmp(r))),
         }
     }
 }
