@@ -1,5 +1,3 @@
-#![allow(non_camel_case_types)]
-
 mod node;
 #[cfg(feature = "map")]
 pub mod rbmap;
@@ -23,6 +21,7 @@ use node::Node;
 /// A map implemented using a red black tree to
 /// store key-value pairs.
 #[cfg(feature = "map")]
+#[allow(clippy::style)]
 #[derive(Clone)]
 pub struct RBMap<K: PartialOrd, V> {
     map: RBTree<Mapper<K, V>>,
@@ -32,6 +31,7 @@ pub struct RBMap<K: PartialOrd, V> {
 /// elements sorted by their PartialOrd provided
 /// ordering.
 #[cfg(feature = "set")]
+#[allow(clippy::style)]
 #[derive(Clone)]
 pub struct RBTree<T: PartialOrd> {
     root: Node<T>,
@@ -43,6 +43,7 @@ pub struct RBTree<T: PartialOrd> {
 /// and transitivity rules as outlined by  the dorumentation
 /// of std::cmp::PartialOrd.
 #[cfg(feature = "queue")]
+#[allow(clippy::style)]
 #[derive(Clone)]
 pub struct RBQueue<T, P>
 where
