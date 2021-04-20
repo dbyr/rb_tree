@@ -22,3 +22,12 @@ map = ["set"]
 fnv = "^1.0.7"
 rand = "0.8.3"
 rand_chacha = "0.3.0"
+criterion = "^0.3.4"
+
+[[bench]]
+name = "map_bench"
+harness = false
+
+[[bench]]
+name = "queue_bench"
+harness = false
