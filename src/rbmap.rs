@@ -161,6 +161,28 @@ impl<K: PartialOrd, V> RBMap<K, V> {
         }
     }
 
+    /// Returns a reference to the value contained
+    /// at the specified key, or the provided default
+    /// value if it is not contained.
+    /// Note: This does _not_ insert `default` into the
+    /// map.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut map = RBMap::new();
+    /// let default = "not found! :o";
+    /// assert_eq!(map.get_or_default(&"Hello", &default), &"not found! :o");
+    /// map.insert("Hello", "world");
+    /// assert_eq!(map.get_or_default(&"Hello", &default), &"world");
+    /// ```
+    pub fn get_or_default<'a, 'b: 'a>(&'b self, key: &K, default: &'a V) -> &'a V {
+        match self.map.get(&Mapper::new(key, None)) {
+            Some(v) => v.as_ref(),
+            None => default,
+        }
+    }
+
     /// Returns an option containing a reference
     /// to the key-value pair associated with this
     /// key, or none if this key does not have an
@@ -388,6 +410,49 @@ impl<K: PartialOrd, V> RBMap<K, V> {
         match self.map.take(&Mapper::new(key, None)) {
             Some(v) => Some(v.consume().1),
             None => None,
+        }
+    }
+
+    /// Returns the value contained at the specified key,
+    /// or the provided default value if it is not contained.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut map = RBMap::new();
+    /// let default = "not found! :o";
+    /// let default2 = default.clone();
+    /// assert_eq!(map.remove_or_default(&"Hello", default), "not found! :o");
+    /// map.insert("Hello", "world");
+    /// assert_eq!(map.remove_or_default(&"Hello", default2), "world");
+    /// ```
+    pub fn remove_or_default(&mut self, key: &K, default: V) -> V {
+        match self.map.take(&Mapper::new(key, None)) {
+            Some(v) => v.consume().1,
+            None => default,
+        }
+    }
+
+    /// Returns the value contained at the specified key,
+    /// or uses the provided closure to generate a value.
+    /// # Example:
+    /// ```
+    /// use rb_tree::RBMap;
+    ///
+    /// let mut gen_numbers = 0..;
+    /// let mut gen = || gen_numbers.next().unwrap();
+    /// let mut map = RBMap::new();
+    /// map.insert(2, 4);
+    ///
+    /// assert_eq!(map.remove_or_else(&1, &mut gen), 0);
+    /// assert_eq!(map.remove_or_else(&2, &mut gen), 4);
+    /// assert_eq!(map.remove_or_else(&3, &mut gen), 1);
+    /// assert_eq!(map.remove_or_else(&4, || gen_numbers.next().unwrap() * 2), 4);
+    /// ```
+    pub fn remove_or_else<F: FnMut() -> V>(&mut self, key: &K, mut or_else: F) -> V {
+        match self.map.take(&Mapper::new(key, None)) {
+            Some(v) => v.consume().1,
+            None => or_else(),
         }
     }
 
