@@ -155,10 +155,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.get(&"Hello").unwrap(), &"world");
     /// ```
     pub fn get(&self, key: &K) -> Option<&V> {
-        match self.map.get(&Mapper::new(key, None)) {
-            Some(v) => Some(v.as_ref()),
-            None => None,
-        }
+        self.map.get(&Mapper::new(key, None)).map(|v| v.as_ref())
     }
 
     /// Returns an option containing a reference
@@ -175,10 +172,9 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.get_pair(&"Hello").unwrap(), (&"Hello", &"world"));
     /// ```
     pub fn get_pair(&self, key: &K) -> Option<(&K, &V)> {
-        match self.map.get(&Mapper::new(key, None)) {
-            Some(v) => Some((v.key(), v.as_ref())),
-            None => None,
-        }
+        self.map
+            .get(&Mapper::new(key, None))
+            .map(|v| (v.key(), v.as_ref()))
     }
 
     /// Returns an option containing a reference
@@ -196,10 +192,9 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.get_pair(&"Hello").unwrap(), (&"Hello", &"world"));
     /// ```
     pub fn get_pair_mut(&mut self, key: &K) -> Option<(&K, &mut V)> {
-        match self.map.get_mut(&Mapper::new(key, None)) {
-            Some(v) => Some(v.mut_pair()),
-            None => None,
-        }
+        self.map
+            .get_mut(&Mapper::new(key, None))
+            .map(|v| v.mut_pair())
     }
 
     /// Returns an option containing a mutable
@@ -217,10 +212,9 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.get(&"Hello").unwrap(), &"world!");
     /// ```
     pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
-        match self.map.get_mut(&Mapper::new(key, None)) {
-            Some(v) => Some(v.as_mut()),
-            None => None,
-        }
+        self.map
+            .get_mut(&Mapper::new(key, None))
+            .map(|v| v.as_mut())
     }
 
     /// Returns an option containing a reference to the
@@ -241,10 +235,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.peek().unwrap(), &"World");
     /// ```
     pub fn peek(&self) -> Option<&V> {
-        match self.map.peek() {
-            Some(v) => Some(v.as_ref()),
-            None => None,
-        }
+        self.map.peek().map(|v| v.as_ref())
     }
 
     /// Returns an option containing a reference to the
@@ -265,10 +256,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.peek_back().unwrap(), &"Foo");
     /// ```
     pub fn peek_back(&self) -> Option<&V> {
-        match self.map.peek_back() {
-            Some(v) => Some(v.as_ref()),
-            None => None,
-        }
+        self.map.peek_back().map(|v| v.as_ref())
     }
 
     /// Returns an option containing a pair with a reference to the
@@ -289,10 +277,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.peek_pair().unwrap(), (&2, &"World"));
     /// ```
     pub fn peek_pair(&self) -> Option<(&K, &V)> {
-        match self.map.peek() {
-            Some(v) => Some(v.pair()),
-            None => None,
-        }
+        self.map.peek().map(|v| v.pair())
     }
 
     /// Returns an option containing a pair with a reference to the
@@ -313,10 +298,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.peek_pair_back().unwrap(), (&7, &"Foo"));
     /// ```
     pub fn peek_pair_back(&self) -> Option<(&K, &V)> {
-        match self.map.peek_back() {
-            Some(v) => Some(v.pair()),
-            None => None,
-        }
+        self.map.peek_back().map(|v| v.pair())
     }
 
     /// Inserts a value to associate with the given key
@@ -332,10 +314,9 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.len(), 2);
     /// ```
     pub fn insert(&mut self, key: K, val: V) -> Option<(K, V)> {
-        match self.map.replace(Mapper::new(key, Some(val))) {
-            Some(v) => Some(v.consume()),
-            None => None,
-        }
+        self.map
+            .replace(Mapper::new(key, Some(val)))
+            .map(|v| v.consume())
     }
 
     /// Returns true if there are no key-value pairs
@@ -385,10 +366,9 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.remove(&2).unwrap(), 4);
     /// ```
     pub fn remove(&mut self, key: &K) -> Option<V> {
-        match self.map.take(&Mapper::new(key, None)) {
-            Some(v) => Some(v.consume().1),
-            None => None,
-        }
+        self.map
+            .take(&Mapper::new(key, None))
+            .map(|v| v.consume().1)
     }
 
     /// Removes the key-value pair associated with key,
@@ -404,10 +384,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.remove_entry(&2).unwrap(), (2, 4));
     /// ```
     pub fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
-        match self.map.take(&Mapper::new(key, None)) {
-            Some(v) => Some(v.consume()),
-            None => None,
-        }
+        self.map.take(&Mapper::new(key, None)).map(|v| v.consume())
     }
 
     /// Removes the pair associated with the key that has the smallest
@@ -428,10 +405,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.pop().unwrap(), "Hello");
     /// ```
     pub fn pop(&mut self) -> Option<V> {
-        match self.map.pop() {
-            Some(v) => Some(v.consume().1),
-            None => None,
-        }
+        self.map.pop().map(|v| v.consume().1)
     }
 
     /// Removes the pair associated with the key that has the largest
@@ -452,10 +426,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.pop_back().unwrap(), "Bar");
     /// ```
     pub fn pop_back(&mut self) -> Option<V> {
-        match self.map.pop_back() {
-            Some(v) => Some(v.consume().1),
-            None => None,
-        }
+        self.map.pop_back().map(|v| v.consume().1)
     }
 
     /// Removes the pair associated with the key that has the smallest
@@ -476,10 +447,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.pop_pair().unwrap(), (5, "Hello"));
     /// ```
     pub fn pop_pair(&mut self) -> Option<(K, V)> {
-        match self.map.pop() {
-            Some(v) => Some(v.consume()),
-            None => None,
-        }
+        self.map.pop().map(|v| v.consume())
     }
 
     /// Removes the pair associated with the key that has the smallest
@@ -500,10 +468,7 @@ impl<K: PartialOrd, V> RBMap<K, V> {
     /// assert_eq!(map.pop_pair_back().unwrap(), (6, "Bar"));
     /// ```
     pub fn pop_pair_back(&mut self) -> Option<(K, V)> {
-        match self.map.pop_back() {
-            Some(v) => Some(v.consume()),
-            None => None,
-        }
+        self.map.pop_back().map(|v| v.consume())
     }
 
     /// Removes all key-value pairs that do not return true for the
@@ -768,10 +733,7 @@ impl<K: PartialOrd, V> Iterator for IntoIter<K, V> {
     type Item = (K, V);
 
     fn next(&mut self) -> Option<(K, V)> {
-        match self.tree.pop() {
-            Some(v) => Some(v.consume()),
-            None => None,
-        }
+        self.tree.pop().map(|v| v.consume())
     }
 }
 
@@ -981,11 +943,7 @@ impl<K: PartialOrd, V> Iterator for Drain<K, V> {
     type Item = (K, V);
 
     fn next(&mut self) -> Option<(K, V)> {
-        let next = self.tree.pop();
-        match next {
-            Some(v) => Some(v.consume()),
-            None => None,
-        }
+        self.tree.pop().map(|v| v.consume())
     }
 }
 
