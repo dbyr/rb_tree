@@ -1,6 +1,9 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Formatter, Result};
 
 #[derive(Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Mapper<K: PartialOrd, V> {
     key: K,
     val: Option<V>,
