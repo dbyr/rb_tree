@@ -463,11 +463,6 @@ impl<T> Node<T> {
             }
             m_swap(&mut tmp, innermost);
             m_swap(&mut self.innards().value, &mut tmp.innards().value);
-            if doubled {
-                Doubled(tmp.gut().value)
-            } else {
-                Removed(tmp.gut().value)
-            }
         } else {
             m_swap(self.get_left_mut(), &mut tmp);
             if self.is_black() {
@@ -479,11 +474,11 @@ impl<T> Node<T> {
                 }
             }
             m_swap(&mut tmp, self);
-            if doubled {
-                Doubled(tmp.gut().value)
-            } else {
-                Removed(tmp.gut().value)
-            }
+        }
+        if doubled {
+            Doubled(tmp.gut().value)
+        } else {
+            Removed(tmp.gut().value)
         }
     }
 
