@@ -13,6 +13,8 @@ mod mapper;
 mod rbtree_tests;
 #[cfg(test)]
 mod stress_test;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "map")]
 use mapper::Mapper;
@@ -23,6 +25,7 @@ use node::Node;
 #[cfg(feature = "map")]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct RBMap<K: PartialOrd, V> {
     map: RBTree<Mapper<K, V>>,
 }
@@ -33,6 +36,7 @@ pub struct RBMap<K: PartialOrd, V> {
 #[cfg(feature = "set")]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct RBTree<T: PartialOrd> {
     root: Node<T>,
     contained: usize,
@@ -45,6 +49,7 @@ pub struct RBTree<T: PartialOrd> {
 #[cfg(feature = "queue")]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct RBQueue<T, P>
 where
     P: Fn(&T, &T) -> std::cmp::Ordering,

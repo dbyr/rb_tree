@@ -1,9 +1,12 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::boxed::Box;
 use std::cmp::Ordering::{Equal, Greater, Less};
 use std::mem::swap as m_swap;
 use std::ops::{Deref, DerefMut};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Colour {
     Red,
     Black,
@@ -28,6 +31,7 @@ enum Removal<T> {
 
 // makes matches nicer
 #[derive(Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Innards<T> {
     value: T,
     colour: Colour,
@@ -36,6 +40,7 @@ pub struct Innards<T> {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 // represents a node in the rb_tree
 pub enum Node<T> {
     Internal(Innards<T>),
@@ -463,11 +468,6 @@ impl<T> Node<T> {
             }
             m_swap(&mut tmp, innermost);
             m_swap(&mut self.innards().value, &mut tmp.innards().value);
-            if doubled {
-                Doubled(tmp.gut().value)
-            } else {
-                Removed(tmp.gut().value)
-            }
         } else {
             m_swap(self.get_left_mut(), &mut tmp);
             if self.is_black() {
@@ -479,11 +479,11 @@ impl<T> Node<T> {
                 }
             }
             m_swap(&mut tmp, self);
-            if doubled {
-                Doubled(tmp.gut().value)
-            } else {
-                Removed(tmp.gut().value)
-            }
+        }
+        if doubled {
+            Doubled(tmp.gut().value)
+        } else {
+            Removed(tmp.gut().value)
         }
     }
 
