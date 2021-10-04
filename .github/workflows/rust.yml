@@ -17,9 +17,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --verbose --all-features
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --verbose --all-features
 
   lint:
 
@@ -40,4 +40,4 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: --all-features -- -D warnings
