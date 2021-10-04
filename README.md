@@ -27,6 +27,8 @@ rb_tree = { version = "*", default-features = false, features = ["map" | "set" |
 
 This will add to your binary the `RBMap`, `RBTree`, and `RBQueue` types respectively. It is important you set `default-features` to false as all features are enabled by default.
 
+Additionally, support for serialisation for the above types can be added with the `serde` feature.
+
 See [here](https://doc.rust-lang.org/cargo/reference/features.html) for more info about cargo's feature system.
 
 ## Examples
